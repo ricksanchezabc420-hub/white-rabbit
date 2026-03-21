@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 
 export default function Hero() {
   return (
-    <section className="relative min-h-[60vh] md:min-h-screen flex flex-col items-center justify-center text-center px-4 overflow-hidden pt-32 pb-16 md:py-0">
+    <section className="relative min-h-[75vh] md:min-h-screen flex flex-col items-center justify-center text-center px-4 overflow-hidden pt-32 pb-16 md:py-0">
       {/* Background Video (Muted, Autoplay, Loop) */}
       <div className="absolute inset-0 z-[-1] bg-black">
         <video 
@@ -14,7 +14,7 @@ export default function Hero() {
           muted 
           playsInline
           preload="auto"
-          className="w-full h-full object-contain md:object-cover opacity-60"
+          className="w-full h-full object-contain scale-[1.25] md:scale-100 md:object-cover opacity-60"
         />
         {/* Dark overlay to ensure text readability */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black" />
