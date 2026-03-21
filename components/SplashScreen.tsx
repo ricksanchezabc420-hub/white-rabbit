@@ -1,0 +1,67 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+export default function SplashScreen() {
+  const [entered, setEntered] = useState(false);
+
+  useEffect(() => {
+    // Lock scrolling while the splash screen is active
+    if (!entered) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    
+    // Cleanup on unmount just in case
+    return () => {
+      document.body.style.overflow = 'auto';
+    }
+  }, [entered]);
+
+  return (
+    <AnimatePresence>
+      {!entered && (
+        <motion.div
+          key="splash"
+          initial={{ opacity: 1 }}
+          exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
+          transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+          className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center pointer-events-auto"
+        >
+          {/* Subtle background ambient glow */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,0,255,0.08)_0%,transparent_50%)] pointer-events-none" />
+
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 1 }}
+            className="flex flex-col items-center relative z-10"
+          >
+            <div className="relative w-48 h-48 mb-8">
+              <img 
+                src="/logo.png" 
+                alt="White Rabbit Neon Logo" 
+                className="w-full h-full object-contain filter drop-shadow-[0_0_20px_rgba(255,0,255,0.6)]"
+              />
+            </div>
+            
+            <h1 className="text-3xl md:text-5xl font-serif tracking-[0.1em] text-white mb-16 select-none">
+              WHITE RABBIT
+            </h1>
+            
+            <motion.button
+              whileHover={{ scale: 1.05, boxShadow: "0 0 25px rgba(255,255,255,0.2)" }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setEntered(true)}
+              className="px-10 py-5 bg-transparent border border-white/20 hover:border-white/80 text-white rounded-full tracking-[0.2em] text-sm md:text-base uppercase transition-all duration-300"
+            >
+              Enter the Rabbit Hole
+            </motion.button>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
