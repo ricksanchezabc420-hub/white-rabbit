@@ -39,7 +39,7 @@ export default function Hero() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => document.getElementById('collection')?.scrollIntoView({ behavior: 'smooth' })}
-          className="bg-neon-pink text-black px-5 py-2.5 rounded-full font-bold text-sm hover:shadow-[0_0_40px_rgba(255,0,255,0.6)] transition-shadow duration-300"
+          className="md:absolute md:bottom-12 bg-neon-pink text-black px-8 py-3 rounded-full font-bold text-sm hover:shadow-[0_0_40px_rgba(255,0,255,0.6)] transition-shadow duration-300"
         >
           Explore the Collection
         </motion.button>
