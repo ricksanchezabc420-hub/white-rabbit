@@ -26,12 +26,12 @@ export default function Hero() {
         transition={{ duration: 1, ease: "easeOut" }}
         className="max-w-4xl mx-auto flex flex-col items-center"
       >
-        <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-serif tracking-tighter mb-4 leading-none">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif tracking-tighter mb-4 leading-none">
           PSILOCYBIN <br />
           <span className="neon-glow-pink italic block mt-2">REIMAGINED</span>
         </h1>
         
-        <p className="max-w-2xl text-lg md:text-xl lg:text-2xl font-light text-white/70 mb-10 text-balance">
+        <p className="max-w-xl text-sm md:text-base lg:text-lg font-light text-white/70 mb-20 md:mb-32 text-balance">
           Fast-acting, flavourful, and formulated for the modern mind.
         </p>
         
@@ -39,7 +39,7 @@ export default function Hero() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => document.getElementById('collection')?.scrollIntoView({ behavior: 'smooth' })}
-          className="bg-neon-pink text-black px-10 py-5 rounded-full font-bold text-lg hover:shadow-[0_0_40px_rgba(255,0,255,0.6)] transition-shadow duration-300"
+          className="bg-neon-pink text-black px-5 py-2.5 rounded-full font-bold text-sm hover:shadow-[0_0_40px_rgba(255,0,255,0.6)] transition-shadow duration-300"
         >
           Explore the Collection
         </motion.button>
