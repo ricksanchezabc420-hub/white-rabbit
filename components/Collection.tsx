@@ -59,7 +59,7 @@ export default function Collection() {
         </div>
 
         {/* 4-column Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           {products.map((product, idx) => (
             <motion.div
               key={product.id}
@@ -67,7 +67,7 @@ export default function Collection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
               transition={{ delay: idx * 0.1, duration: 0.6 }}
-              className={`glass flex flex-col p-6 rounded-3xl transition-all duration-500 group ${product.bgHover}`}
+              className={`glass flex flex-col p-4 sm:p-6 rounded-3xl transition-all duration-500 group ${product.bgHover}`}
             >
               {/* Product Image/Video Container */}
               <div className="w-full aspect-[3/4] rounded-2xl bg-black/50 mb-6 overflow-hidden relative border border-white/5">
@@ -79,19 +79,19 @@ export default function Collection() {
                 />
               </div>
 
-              <div className="mt-auto">
-                <h4 className={`text-2xl font-serif mb-2 ${product.theme} tracking-wide`}>{product.name}</h4>
-                <p className="text-sm text-white/50 font-light mb-6 line-clamp-2">
+              <div className="mt-auto flex flex-col items-center ext-center">
+                <h4 className={`text-lg sm:text-2xl font-serif mb-1 sm:mb-2 ${product.theme} tracking-wide text-center`}>{product.name}</h4>
+                <p className="text-xs sm:text-sm text-white/50 font-light mb-4 sm:mb-6 line-clamp-2 text-center">
                   {product.description}
                 </p>
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-lg group-hover:text-white transition-colors text-white/80">$45 <span className="text-xs text-white/40">USDC</span></span>
+                <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-2 sm:gap-0">
+                  <span className="font-mono text-base sm:text-lg group-hover:text-white transition-colors text-white/80">$45 <span className="text-[10px] sm:text-xs text-white/40">USDC</span></span>
                   
                   {/* Web3 CTA */}
                   <motion.button 
                     whileTap={{ scale: 0.95 }}
                     onClick={() => addItem({ id: product.id, name: product.name, price: 45, theme: product.theme })}
-                    className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider bg-white/10 hover:bg-white text-white hover:text-black transition-all ${product.glow}`}
+                    className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider bg-white/10 hover:bg-white text-white hover:text-black transition-all ${product.glow}`}
                   >
                     Add to Cart
                   </motion.button>

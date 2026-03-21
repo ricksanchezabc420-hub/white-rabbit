@@ -13,7 +13,7 @@ export default function Hero() {
           loop 
           muted 
           playsInline
-          className="w-full h-full object-cover opacity-60"
+          className="w-full h-full object-contain md:object-cover opacity-60"
         />
         {/* Dark overlay to ensure text readability */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black" />

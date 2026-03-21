@@ -41,7 +41,7 @@ export default function Advantages() {
           <h3 className="text-4xl md:text-5xl font-serif">Designed for Different Surroundings</h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-6">
           {advantages.map((adv, index) => (
             <motion.div
               key={adv.title}
@@ -49,13 +49,13 @@ export default function Advantages() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className={`glass p-8 rounded-2xl group hover:border-white/20 transition-all ${adv.className}`}
+              className={`glass p-4 sm:p-8 rounded-2xl group hover:border-white/20 transition-all flex flex-col items-center text-center ${adv.className}`}
             >
-              <div className="bg-white/5 w-12 h-12 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <div className="bg-white/5 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform">
                 {adv.icon}
               </div>
-              <h4 className="text-xl font-medium mb-3">{adv.title}</h4>
-              <p className="text-white/60 font-light leading-relaxed">{adv.description}</p>
+              <h4 className="text-base sm:text-xl font-medium mb-2 sm:mb-3">{adv.title}</h4>
+              <p className="text-[11px] sm:text-sm md:text-base text-white/60 font-light leading-snug sm:leading-relaxed">{adv.description}</p>
             </motion.div>
           ))}
         </div>
