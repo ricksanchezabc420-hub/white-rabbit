@@ -41,8 +41,9 @@ export default function Innovation() {
           className="absolute inset-0 w-full h-full object-cover scale-[1.05]"
         />
         {/* Gradient wash corresponding to our dark mode UI */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black via-transparent to-transparent hidden md:block" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-transparent md:hidden" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent hidden md:block" />
+        {/* Bottom fade for all devices */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
       </div>
     </section>
   );
