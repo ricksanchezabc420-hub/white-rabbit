@@ -47,7 +47,7 @@ export default function Collection() {
   const addItem = useCartStore((state) => state.addItem);
 
   return (
-    <section id="collection" className="py-24 px-6 md:px-12 lg:px-24 relative overflow-hidden">
+    <section id="collection" className="py-12 md:py-24 px-6 md:px-12 lg:px-24 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_top_right,rgba(0,255,255,0.05)_0%,transparent_50%)] pointer-events-none" />
       
       <div className="max-w-7xl mx-auto">

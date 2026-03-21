@@ -32,7 +32,7 @@ const advantages = [
 
 export default function Advantages() {
   return (
-    <section id="science" className="py-24 px-6 md:px-12 lg:px-24 bg-black relative">
+    <section id="science" className="py-12 md:py-24 px-6 md:px-12 lg:px-24 bg-black relative">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,0,255,0.05)_0%,transparent_70%)] pointer-events-none" />
       
       <div className="max-w-6xl mx-auto">

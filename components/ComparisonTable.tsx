@@ -14,7 +14,7 @@ const tableData = [
 
 export default function ComparisonTable() {
   return (
-    <section className="py-24 px-6 md:px-12 lg:px-24 border-t border-white/5 bg-black/50">
+    <section className="py-12 md:py-24 px-6 md:px-12 lg:px-24 border-t border-white/5 bg-black/50">
       <div className="max-w-5xl mx-auto">
         
         <div className="text-center mb-16">
