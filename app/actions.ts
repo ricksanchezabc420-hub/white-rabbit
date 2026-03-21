@@ -36,7 +36,15 @@ export async function verifyTransaction(
       walletAddress,
       transactionHash,
       totalUsd: expectedUsd.toString(),
-      status: 'PENDING'
+      status: 'PENDING',
+      shippingName: 'TBD',
+      email: 'tbd@tbd.com',
+      address: 'TBD',
+      city: 'TBD',
+      stateProvince: 'TBD',
+      postalCode: 'TBD',
+      country: 'TBD',
+      items: [],
     });
 
     // 2. Wait for transaction confirmation on-chain
