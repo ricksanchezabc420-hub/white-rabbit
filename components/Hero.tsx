@@ -13,6 +13,7 @@ export default function Hero() {
           loop 
           muted 
           playsInline
+          preload="auto"
           className="w-full h-full object-contain md:object-cover opacity-60"
         />
         {/* Dark overlay to ensure text readability */}

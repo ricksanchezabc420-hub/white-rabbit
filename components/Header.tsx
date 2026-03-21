@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { ConnectKitButton } from 'connectkit';
 import { ShoppingCart } from 'lucide-react';
 import { useCartStore } from '@/store/useCartStore';
+import Image from 'next/image';
 
 export default function Header() {
   const { scrollY } = useScroll();
@@ -25,10 +26,12 @@ export default function Header() {
       
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 relative">
-          <img 
+          <Image 
             src="/logo.png" 
             alt="Logo" 
-            className="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(255,0,255,0.5)]"
+            fill
+            sizes="40px"
+            className="object-contain filter drop-shadow-[0_0_10px_rgba(255,0,255,0.5)]"
           />
         </div>
         <span className="font-serif text-xl tracking-tighter neon-glow-pink select-none">WHITE RABBIT</span>

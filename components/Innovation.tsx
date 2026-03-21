@@ -37,6 +37,7 @@ export default function Innovation() {
           loop 
           muted 
           playsInline
+          preload="metadata"
           className="absolute inset-0 w-full h-full object-cover scale-[1.05]"
         />
         {/* Gradient wash corresponding to our dark mode UI */}

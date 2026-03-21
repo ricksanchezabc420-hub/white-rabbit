@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useCartStore } from '@/store/useCartStore';
+import Image from 'next/image';
 
 const products = [
   {
@@ -72,10 +73,12 @@ export default function Collection() {
               {/* Product Image/Video Container */}
               <div className="w-full aspect-[3/4] rounded-2xl bg-black/50 mb-6 overflow-hidden relative border border-white/5">
                 {/* High-fidelity product bottle image with screen blending for black backgrounds */}
-                <img 
+                <Image 
                   src={`/${product.imageFile}`}
                   alt={`${product.name} Bottle`}
-                  className="absolute inset-0 w-full h-full object-contain p-4 mix-blend-screen group-hover:scale-105 transition-transform duration-500"
+                  fill
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
+                  className="object-contain p-4 mix-blend-screen group-hover:scale-105 transition-transform duration-500"
                 />
               </div>
 
