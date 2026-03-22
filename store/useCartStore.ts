@@ -18,7 +18,10 @@ interface CartStore {
   clearCart: () => void;
   toggleCart: (open?: boolean) => void;
   getCartTotal: () => number;
+  getCartTotalCAD: () => number;
 }
+
+const USDC_TO_CAD = 1.35; // Semi-regularly updated relative cost rate
 
 export const useCartStore = create<CartStore>()(
   persist(
@@ -47,6 +50,7 @@ export const useCartStore = create<CartStore>()(
       clearCart: () => set({ items: [] }),
       toggleCart: (open) => set((state) => ({ isOpen: open !== undefined ? open : !state.isOpen })),
       getCartTotal: () => get().items.reduce((total, item) => total + (item.price * item.quantity), 0),
+      getCartTotalCAD: () => get().getCartTotal() * USDC_TO_CAD,
     }),
     {
       name: 'white-rabbit-cart',

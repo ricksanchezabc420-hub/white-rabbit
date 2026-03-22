@@ -10,7 +10,7 @@ import { useAccount, useSendTransaction } from 'wagmi';
 import { parseEther } from 'viem';
 
 export default function CheckoutPage() {
-  const { items, getCartTotal, clearCart } = useCartStore();
+  const { items, getCartTotal, getCartTotalCAD, clearCart } = useCartStore();
   const router = useRouter();
   const { isConnected } = useAccount();
   const { sendTransactionAsync } = useSendTransaction();
@@ -117,7 +117,7 @@ export default function CheckoutPage() {
               {paymentMethod === 'E-TRANSFER' && (
                 <div className="bg-acid-green/10 border border-acid-green/20 p-6 rounded-xl mb-8">
                   <h3 className="text-acid-green font-bold mb-2">E-Transfer Instructions</h3>
-                  <p className="text-sm text-white/70">Please send exactly <strong>${total.toFixed(2)} USD</strong> to <strong>pay@whiterabbit.com</strong>. Include your email address in the transfer notes. Your order will ship once the deposit is manually verified.</p>
+                  <p className="text-sm text-white/70">Please send exactly <strong>${total.toFixed(2)} USD</strong> (~${getCartTotalCAD().toFixed(2)} CAD) to <strong>pay@whiterabbit.com</strong>. Include your email address in the transfer notes. Your order will ship once the deposit is manually verified.</p>
                 </div>
               )}
 
@@ -126,7 +126,7 @@ export default function CheckoutPage() {
                 disabled={isProcessing}
                 className="w-full bg-neon-pink text-black py-4 rounded-xl font-bold hover:shadow-[0_0_20px_rgba(255,0,255,0.5)] transition-all disabled:opacity-50"
               >
-                {isProcessing ? 'Processing...' : `Place Order • $${total.toFixed(2)}`}
+                {isProcessing ? 'Processing...' : `Place Order • $${total.toFixed(2)} USDC`}
               </button>
             </motion.div>
           )}
@@ -176,9 +176,12 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            <div className="border-t border-white/10 pt-4 flex justify-between items-center">
-              <span className="font-bold">Total</span>
-              <span className="text-2xl font-mono">${total.toFixed(2)}</span>
+            <div className="border-t border-white/10 pt-4 flex justify-between items-end">
+              <span className="font-bold pb-1">Total</span>
+              <div className="text-right">
+                <div className="text-2xl font-mono leading-none mb-1">${total.toFixed(2)} <span className="text-xs text-white/30 font-sans">USDC</span></div>
+                <div className="text-sm font-mono text-white/40 italic">~${getCartTotalCAD().toFixed(2)} CAD</div>
+              </div>
             </div>
           </div>
         </div>

@@ -62,9 +62,12 @@ export default function CartDrawer() {
 
             {items.length > 0 && (
               <div className="p-6 border-t border-white/10 bg-black/50 backdrop-blur-md">
-                <div className="flex justify-between items-center mb-6">
-                  <span className="text-white/50 font-light">Subtotal</span>
-                  <span className="text-2xl font-mono">${getCartTotal().toFixed(2)}</span>
+                <div className="flex justify-between items-end mb-6">
+                  <span className="text-white/50 font-light translate-y-[-4px]">Subtotal</span>
+                  <div className="text-right">
+                    <div className="text-2xl font-mono leading-none mb-1 text-white">${getCartTotal().toFixed(2)} <span className="text-xs text-white/30 font-sans">USDC</span></div>
+                    <div className="text-sm font-mono text-white/40 italic">~${getCartTotalCAD().toFixed(2)} CAD</div>
+                  </div>
                 </div>
                 <button 
                   onClick={() => {
