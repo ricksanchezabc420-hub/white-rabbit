@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, Lock, User } from 'lucide-react';
 import { login } from '@/app/actions/authActions';
 
@@ -26,7 +26,7 @@ export default function LoginPage() {
     if (result.success) {
       router.push('/control/orders');
     } else {
-      setError(result.error);
+      setError(result.error || 'Access denied.');
       setIsLoading(false);
     }
   };

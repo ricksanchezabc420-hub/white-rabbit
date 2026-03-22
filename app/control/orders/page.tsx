@@ -179,7 +179,7 @@ export default function FulfillmentPage() {
                         <div className="text-[9px] font-mono text-white/30 uppercase mb-1">Tracking Out</div>
                         <div className="text-white font-mono text-xs truncate mb-2">{order.trackingNumber}</div>
                         <div className="text-[9px] font-mono text-acid-green/60 uppercase">
-                          Shipped: {new Date(order.shippedAt!).toLocaleDateString()}
+                          Shipped: {order.shippedAt ? new Date(order.shippedAt).toLocaleDateString() : 'N/A'}
                         </div>
                       </div>
                     )}
