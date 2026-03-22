@@ -6,7 +6,7 @@ import { X, Minus, Plus, ShoppingBag } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function CartDrawer() {
-  const { items, isOpen, toggleCart, updateQuantity, getCartTotal } = useCartStore();
+  const { items, isOpen, toggleCart, updateQuantity, getCartTotal, getCartTotalCAD } = useCartStore();
   const router = useRouter();
 
   return (
