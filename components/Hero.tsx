@@ -17,7 +17,7 @@ export default function Hero() {
   }, [isEntered]);
 
   return (
-    <section className="relative min-h-[80vh] md:min-h-screen flex flex-col items-center justify-center text-center px-4 overflow-hidden">
+    <section className="relative mt-20 md:mt-0 min-h-[80vh] md:min-h-screen flex flex-col items-center justify-center text-center px-4 overflow-hidden">
       {/* Background Video (Muted, Loop) */}
       <div className="absolute inset-0 z-[-1] bg-black">
         <video 
