@@ -19,6 +19,8 @@ interface CartStore {
   toggleCart: (open?: boolean) => void;
   getCartTotal: () => number;
   getCartTotalCAD: () => number;
+  isEntered: boolean;
+  setSiteEntered: (entered: boolean) => void;
 }
 
 const USDC_TO_CAD = 1.35; // Semi-regularly updated relative cost rate
@@ -28,6 +30,8 @@ export const useCartStore = create<CartStore>()(
     (set, get) => ({
       items: [],
       isOpen: false,
+      isEntered: false,
+      setSiteEntered: (entered) => set({ isEntered: entered }),
       addItem: (item) => {
         set((state) => {
           const existing = state.items.find(i => i.id === item.id);

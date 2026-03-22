@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useCartStore } from '@/store/useCartStore';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function SplashScreen() {
-  const [entered, setEntered] = useState(false);
+  const { isEntered: entered, setSiteEntered: setEntered } = useCartStore();
   const [showAgeVerification, setShowAgeVerification] = useState(false);
 
   useEffect(() => {

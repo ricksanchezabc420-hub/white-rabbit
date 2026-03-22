@@ -1,15 +1,27 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { useCartStore } from '@/store/useCartStore';
 
 export default function Hero() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const { isEntered } = useCartStore();
+
+  useEffect(() => {
+    if (isEntered && videoRef.current) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.play().catch(err => console.error("Video play failed:", err));
+    }
+  }, [isEntered]);
+
   return (
     <section className="relative min-h-[70vh] md:min-h-screen flex flex-col items-center justify-start md:justify-center text-center px-4 overflow-hidden pt-24 md:pt-0">
-      {/* Background Video (Muted, Autoplay, Loop) */}
+      {/* Background Video (Muted, Loop) */}
       <div className="absolute inset-0 z-[-1] bg-black">
         <video 
+          ref={videoRef}
           src="/videos/hero.mp4"
-          autoPlay 
           loop 
           muted 
           playsInline
