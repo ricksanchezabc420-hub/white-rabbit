@@ -6,16 +6,17 @@ export default function Innovation() {
   return (
     <section id="innovations" className="relative min-h-[60vh] md:min-h-screen flex flex-col md:flex-row items-center justify-between border-t border-white/5 py-12 md:py-0">
       {/* Text Content */}
-      <div className="w-full md:w-1/2 p-8 md:p-16 lg:p-24 flex flex-col justify-center z-10">
+      <div className="w-full md:w-1/2 p-8 md:p-16 lg:p-24 flex flex-col items-center md:items-start text-center md:text-left justify-center z-10">
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8 }}
+          className="flex flex-col items-center md:items-start"
         >
           <h2 className="text-sm tracking-[0.2em] text-neon-pink uppercase mb-4">The Science</h2>
           <h3 className="text-4xl md:text-5xl font-serif mb-6 leading-tight">
-            Biomass Removal vs. <br/> Traditional Methods
+            Biomass Removal vs. <br className="hidden md:block"/> Traditional Methods
           </h3>
           <p className="text-white/60 text-lg mb-8 max-w-lg font-light leading-relaxed">
             By completely stripping the raw organic matter, we extract purely stabilized psilocin. 
@@ -38,8 +39,8 @@ export default function Innovation() {
         />
         {/* Gradient wash corresponding to our dark mode UI */}
         <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent hidden md:block" />
-        {/* Bottom fade for all devices */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+        {/* Bottom fade for all devices - extended deeper into the image */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 via-40% to-transparent" />
       </div>
     </section>
   );
