@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 
 export default function Innovation() {
   return (
-    <section id="innovations" className="relative min-h-screen flex flex-col md:flex-row items-center justify-between border-t border-white/5">
+    <section id="innovations" className="relative min-h-[60vh] md:min-h-screen flex flex-col md:flex-row items-center justify-between border-t border-white/5 py-12 md:py-0">
       {/* Text Content */}
       <div className="w-full md:w-1/2 p-8 md:p-16 lg:p-24 flex flex-col justify-center z-10">
         <motion.div
