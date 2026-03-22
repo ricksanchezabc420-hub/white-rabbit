@@ -26,7 +26,7 @@ export default function Hero() {
           muted 
           playsInline
           preload="auto"
-          className="w-full h-full object-cover scale-[1.45] md:scale-100 opacity-60"
+          className="w-full h-full object-cover scale-[1.1] md:scale-100 opacity-60"
         />
         {/* Mobile top and bottom black fade for better video blending */}
         <div className="absolute top-0 left-0 w-full h-[35%] bg-gradient-to-b from-black via-black/80 to-transparent md:hidden pointer-events-none" />
