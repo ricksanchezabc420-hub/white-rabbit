@@ -53,7 +53,7 @@ export default function Collection() {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-sm tracking-[0.2em] text-vibrant-purple uppercase mb-4">The Collection</h2>
-          <h3 className="text-5xl md:text-6xl font-serif">Enter the Rabbit Hole</h3>
+          <h3 className="text-5xl md:text-6xl font-serif">DRINK DIFFERENT</h3>
           <p className="mt-4 text-white/50 font-light max-w-xl mx-auto">
             3000MG Precision Dosing. Select your flavor and pay seamlessly with Web3 crypto.
           </p>
@@ -88,12 +88,12 @@ export default function Collection() {
                   {product.description}
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-2 sm:gap-0">
-                  <span className="font-mono text-base sm:text-lg group-hover:text-white transition-colors text-white/80">$45 <span className="text-[10px] sm:text-xs text-white/40">USDC</span></span>
+                  <span className="font-mono text-base sm:text-lg group-hover:text-white transition-colors text-white/80">$30 <span className="text-[10px] sm:text-xs text-white/40">USDC</span></span>
                   
                   {/* Web3 CTA */}
                   <motion.button 
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => addItem({ id: product.id, name: product.name, price: 45, theme: product.theme })}
+                    onClick={() => addItem({ id: product.id, name: product.name, price: 30, theme: product.theme })}
                     className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider bg-white/10 hover:bg-white text-white hover:text-black transition-all ${product.glow}`}
                   >
                     Add to Cart
