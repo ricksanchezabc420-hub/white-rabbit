@@ -52,14 +52,24 @@ export default function CheckoutPage() {
         });
       }
 
-      // Simulate Database Save (In production, call server action here)
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Save to Database
+      const result = await createOrder({
+        ...formData,
+        paymentMethod,
+        totalUsd: total.toString(),
+        items: JSON.stringify(items),
+        walletAddress: isConnected ? 'CONNECTED' : null, // Simplified for now
+      });
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
       
       clearCart();
       setStep(3);
     } catch (error) {
       console.error(error);
-      alert('Transaction failed. Please try again.');
+      alert('Order failed. Please try again.');
     } finally {
       setIsProcessing(false);
     }
