@@ -16,7 +16,7 @@ export default function Hero() {
   }, [isEntered]);
 
   return (
-    <section className="relative min-h-[70vh] md:min-h-screen flex flex-col items-center justify-start md:justify-center text-center px-4 overflow-hidden pt-24 md:pt-0">
+    <section className="relative min-h-[85vh] md:min-h-screen flex flex-col items-center justify-start md:justify-center text-center px-4 overflow-hidden pt-24 md:pt-0">
       {/* Background Video (Muted, Loop) */}
       <div className="absolute inset-0 z-[-1] bg-black">
         <video 
@@ -26,7 +26,7 @@ export default function Hero() {
           muted 
           playsInline
           preload="auto"
-          className="w-full h-full object-contain scale-[1.25] md:scale-100 md:object-cover opacity-60"
+          className="w-full h-full object-contain scale-[1.45] md:scale-100 md:object-cover opacity-60"
         />
         {/* Mobile top and bottom black fade for better video blending */}
         <div className="absolute top-0 left-0 w-full h-[35%] bg-gradient-to-b from-black via-black/80 to-transparent md:hidden pointer-events-none" />
