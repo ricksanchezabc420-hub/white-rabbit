@@ -36,7 +36,7 @@ export default function SplashScreen() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,0,255,0.08)_0%,transparent_50%)] pointer-events-none" />
           
           {/* Enhanced pulsating glow border */}
-          <div className="absolute inset-0 pointer-events-none z-50 shadow-[inset_0_0_150px_rgba(255,0,255,0.3)] border-2 border-neon-pink/20 animate-pulse" />
+          <div className="absolute inset-0 pointer-events-none z-50 neon-border-glow animate-slow-pulse" />
 
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
