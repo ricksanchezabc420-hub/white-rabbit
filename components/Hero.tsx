@@ -3,10 +3,11 @@
 import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useCartStore } from '@/store/useCartStore';
+import { useUIStore } from '@/store/useUIStore';
 
 export default function Hero() {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const { isEntered } = useCartStore();
+  const { isEntered } = useUIStore();
 
   useEffect(() => {
     if (isEntered && videoRef.current) {

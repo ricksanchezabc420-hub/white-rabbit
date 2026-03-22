@@ -2,11 +2,13 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCartStore } from '@/store/useCartStore';
+import { useUIStore } from '@/store/useUIStore';
 import { X, Minus, Plus, ShoppingBag } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function CartDrawer() {
-  const { items, isOpen, toggleCart, updateQuantity, getCartTotal, getCartTotalCAD } = useCartStore();
+  const { items, updateQuantity, getCartTotal, getCartTotalCAD } = useCartStore();
+  const { isCartOpen: isOpen, toggleCart } = useUIStore();
   const router = useRouter();
 
   return (

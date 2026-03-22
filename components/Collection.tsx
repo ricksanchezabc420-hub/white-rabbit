@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useCartStore } from '@/store/useCartStore';
+import { useUIStore } from '@/store/useUIStore';
 import Image from 'next/image';
 
 const products = [
@@ -45,6 +46,7 @@ const products = [
 
 export default function Collection() {
   const addItem = useCartStore((state) => state.addItem);
+  const setCartOpen = useUIStore((state) => state.setCartOpen);
 
   return (
     <section id="collection" className="py-12 md:py-24 px-6 md:px-12 lg:px-24 relative overflow-hidden">
@@ -93,7 +95,10 @@ export default function Collection() {
                   {/* Web3 CTA */}
                   <motion.button 
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => addItem({ id: product.id, name: product.name, price: 30, theme: product.theme })}
+                    onClick={() => {
+                      addItem({ id: product.id, name: product.name, price: 30, theme: product.theme });
+                      setCartOpen(true);
+                    }}
                     className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider bg-white/10 hover:bg-white text-white hover:text-black transition-all ${product.glow}`}
                   >
                     Add to Cart

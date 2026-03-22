@@ -4,11 +4,13 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { ConnectKitButton } from 'connectkit';
 import { ShoppingCart } from 'lucide-react';
 import { useCartStore } from '@/store/useCartStore';
+import { useUIStore } from '@/store/useUIStore';
 import Image from 'next/image';
 
 export default function Header() {
   const { scrollY } = useScroll();
-  const { items, toggleCart } = useCartStore();
+  const { items } = useCartStore();
+  const { toggleCart } = useUIStore();
   
   // Transition background and padding on scroll
   const headerOpacity = useTransform(scrollY, [0, 50], [0, 1]);
