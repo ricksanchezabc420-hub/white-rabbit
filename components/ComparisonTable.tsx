@@ -28,7 +28,7 @@ export default function ComparisonTable() {
               <tr className="border-b border-white/10">
                 <th className="py-3 px-2 sm:py-6 sm:px-4 font-normal text-white/50 w-1/3 text-[10px] sm:text-base">Feature</th>
                 <th className="py-3 px-2 sm:py-6 sm:px-4 font-serif text-xs sm:text-2xl text-white neon-glow-blue w-1/3 bg-white/5 rounded-tl-xl rounded-tr-xl border-x border-t border-white/10">WHITE RABBIT</th>
-                <th className="py-3 px-2 sm:py-6 sm:px-4 font-normal text-white/50 w-1/3 text-[10px] sm:text-base">Traditional Methods</th>
+                <th className="py-3 px-2 sm:py-6 sm:px-4 font-serif text-xs sm:text-2xl text-white/80 neon-glow-red w-1/3 bg-red-500/5 rounded-tl-xl rounded-tr-xl border-x border-t border-white/10">Traditional Methods</th>
               </tr>
             </thead>
             <tbody>
@@ -48,9 +48,9 @@ export default function ComparisonTable() {
                       <span className="text-center sm:text-left">{row.whiteRabbit}</span>
                     </div>
                   </td>
-                  <td className="py-3 px-1 sm:py-5 sm:px-4 font-light text-white/40 text-[10px] sm:text-base">
+                  <td className="py-3 px-1 sm:py-5 sm:px-4 font-light text-white/40 bg-red-500/5 border-x border-white/10 text-[10px] sm:text-base">
                     <div className="flex flex-col sm:flex-row items-center sm:items-start gap-1 sm:gap-3">
-                      <X className="w-3 h-3 sm:w-5 sm:h-5 opacity-50 shrink-0" />
+                      <X className="w-3 h-3 sm:w-5 sm:h-5 opacity-50 text-red-500 shrink-0" />
                       <span className="text-center sm:text-left">{row.traditional}</span>
                     </div>
                   </td>
@@ -58,7 +58,11 @@ export default function ComparisonTable() {
               ))}
             </tbody>
           </table>
-          <div className="h-4 bg-white/5 border-x border-b border-white/10 rounded-bl-xl rounded-br-xl w-1/3 ml-[33.333333%]" />
+          <div className="flex w-full">
+            <div className="w-1/3" />
+            <div className="h-4 bg-white/5 border-x border-b border-white/10 rounded-bl-xl rounded-br-xl w-1/3" />
+            <div className="h-4 bg-red-500/5 border-x border-b border-white/10 rounded-bl-xl rounded-br-xl w-1/3" />
+          </div>
         </div>
 
       </div>

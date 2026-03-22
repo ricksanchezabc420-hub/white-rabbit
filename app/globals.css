@@ -39,3 +39,7 @@ h1, h2, h3, h4, h5, h6 {
 .neon-glow-blue {
   text-shadow: 0 0 10px var(--color-electric-blue), 0 0 20px var(--color-electric-blue);
 }
+
+.neon-glow-red {
+  text-shadow: 0 0 10px rgba(255, 0, 0, 0.8), 0 0 20px rgba(255, 0, 0, 0.4);
+}
