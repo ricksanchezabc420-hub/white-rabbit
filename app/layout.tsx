@@ -30,7 +30,7 @@ export default function RootLayout({
         className={`${sans.variable} ${serif.variable} antialiased bg-[#000000] text-white selection:bg-neon-pink/30`}
       >
         <Web3Provider>
-          <div className="fixed inset-0 pointer-events-none z-[100] shadow-[inset_0_0_80px_rgba(255,0,255,0.15)] border-[1px] border-neon-pink/10 animate-pulse" />
+          <div className="fixed inset-0 pointer-events-none z-[100] shadow-[inset_0_0_150px_rgba(255,0,255,0.25)] border-2 border-neon-pink/20 animate-pulse" />
           {children}
           <CartDrawer />
         </Web3Provider>
