@@ -16,8 +16,12 @@ export default function Hero() {
           preload="auto"
           className="w-full h-full object-contain scale-[1.25] md:scale-100 md:object-cover opacity-60"
         />
+        {/* Mobile top and bottom black fade for better video blending */}
+        <div className="absolute top-0 left-0 w-full h-[35%] bg-gradient-to-b from-black via-black/80 to-transparent md:hidden pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-full h-[35%] bg-gradient-to-t from-black via-black/80 to-transparent md:hidden pointer-events-none" />
+        
         {/* Dark overlay to ensure text readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black pointer-events-none" />
       </div>
 
       <motion.div
@@ -39,7 +43,7 @@ export default function Hero() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => document.getElementById('collection')?.scrollIntoView({ behavior: 'smooth' })}
-          className="absolute bottom-6 bg-neon-pink text-black px-4 py-2 rounded-full font-serif font-bold text-xs hover:shadow-[0_0_40px_rgba(255,0,255,0.6)] transition-shadow duration-300"
+          className="absolute bottom-24 md:bottom-10 bg-neon-pink text-black px-4 py-2 rounded-full font-serif font-bold text-xs hover:shadow-[0_0_40px_rgba(255,0,255,0.6)] transition-shadow duration-300"
         >
           Explore the Collection
         </motion.button>

@@ -58,9 +58,9 @@ export default function SplashScreen() {
                   ]
                 }}
                 transition={{ 
-                  duration: 2.5,
+                  duration: 3.5,
                   delay: 0.8,
-                  times: [0, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 1],
+                  times: [0, 0.1, 0.2, 0.3, 0.4, 0.6, 0.8, 1],
                   ease: "easeInOut"
                 }}
                 className="w-full h-full object-contain"
