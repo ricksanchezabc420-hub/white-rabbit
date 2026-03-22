@@ -22,10 +22,6 @@ export default function Innovation() {
             This revolutionary process eliminates the nausea associated with traditional consumption, 
             allowing for a pristine, rapid 15-minute onset.
           </p>
-          <button onClick={() => window.open('/WhiteRabbit-Catalog.pdf', '_blank')} className="flex items-center gap-2 text-sm font-semibold hover:text-electric-blue transition-colors group">
-            <span>Read the Whitepaper</span>
-            <span className="transform group-hover:translate-x-1 transition-transform">→</span>
-          </button>
         </motion.div>
       </div>
 
