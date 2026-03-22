@@ -3,9 +3,15 @@
 import { db } from '@/db';
 import { orders } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASSWORD,
+  },
+});
 
 export async function getOrders() {
   try {
@@ -23,35 +29,36 @@ export async function createOrder(orderData: any) {
       status: 'PENDING',
     }).returning();
 
-    // Send Confirmation Email
-    if (newOrder.email) {
-      try {
-        await resend.emails.send({
-          from: 'White Rabbit <orders@whiterabbit.com>',
-          to: newOrder.email,
-          subject: 'Order Received - White Rabbit',
-          html: `<div style="font-family: serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #333; border-radius: 20px; background: #000; color: #fff;">
-            <h1 style="color: #fff; text-align: center; letter-spacing: 2px;">WHITE RABBIT</h1>
-            <p style="color: #666; font-style: italic;">We've received your order.</p>
-            <hr style="border-color: #333;">
-            <div style="margin-top: 20px;">
-              <p>Hello <strong>${newOrder.shippingName}</strong>,</p>
-              <p>Your order <strong>#${newOrder.id.slice(0, 8)}</strong> has been received and is being prepared for fulfillment.</p>
-              <p>Total: <strong>$${newOrder.totalUsd} USDC</strong></p>
-              ${newOrder.paymentMethod === 'E-TRANSFER' ? '<p style="color: #bfff00; font-weight: bold;">Reminder: Please complete your E-transfer to finalize production.</p>' : ''}
-              <p style="margin-top: 40px; color: #666; font-size: 12px;">The sequence has begun. Follow the rabbit.</p>
-            </div>
-          </div>`,
-        });
-      } catch (emailError) {
-        console.error('Email failed:', emailError);
-      }
-    }
+    // Send Confirmation Emails via Gmail
+    const mailOptions = {
+      from: `"White Rabbit" <${process.env.GMAIL_USER}>`,
+      to: [newOrder.email, process.env.GMAIL_USER || ''], // Send to customer AND admin
+      subject: `Order Received #${newOrder.id.slice(0, 8)} - White Rabbit`,
+      html: `
+        <div style="font-family: serif; max-width: 600px; margin: 0 auto; padding: 40px; background: #000; color: #fff; border: 1px solid #333; border-radius: 30px;">
+          <h1 style="text-align: center; letter-spacing: 5px; color: #fff; margin-bottom: 40px;">WHITE RABBIT</h1>
+          <p style="font-style: italic; color: #888; text-align: center; margin-bottom: 40px;">A new sequence has been initiated.</p>
+          <div style="border-top: 1px solid #222; padding-top: 30px; line-height: 1.6;">
+            <p>Order ID: <span style="font-family: monospace; color: #00ffff;">#${newOrder.id.slice(0, 8)}</span></p>
+            <p>Name: <strong>${newOrder.shippingName}</strong></p>
+            <p>Total: <strong>$${newOrder.totalUsd} USDC</strong></p>
+            <p>Status: <span style="color: #bfff00;">Awaiting Fulfillment</span></p>
+            ${newOrder.paymentMethod === 'E-TRANSFER' ? '<p style="color: #ff3e3e; font-weight: bold; border: 1px solid #ff3e3e; padding: 10px; border-radius: 10px; margin-top: 20px;">* ACTION REQUIRED: Please complete your E-transfer to pay@whiterabbit.com to begin production.</p>' : ''}
+          </div>
+          <div style="margin-top: 40px; padding: 20px; background: #111; border-radius: 15px;">
+            <p style="font-size: 12px; color: #666; margin: 0;">Shipping to: ${newOrder.shippingName}, ${newOrder.address}, ${newOrder.city}</p>
+          </div>
+          <p style="margin-top: 60px; text-align: center; font-size: 10px; color: #444; letter-spacing: 2px;">FOLLOW THE RABBIT</p>
+        </div>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
 
     return { success: true, orderId: newOrder.id };
   } catch (error) {
     console.error('Order creation failed:', error);
-    return { success: false, error: 'Database submission failed' };
+    return { success: false, error: 'Transmission error. Sequence interrupted.' };
   }
 }
 
@@ -66,32 +73,32 @@ export async function updateOrderTracking(orderId: string, trackingNumber: strin
       .where(eq(orders.id, orderId))
       .returning();
 
-    // Send Shipping Email
-    if (updatedOrder.email) {
-      try {
-        await resend.emails.send({
-          from: 'White Rabbit <orders@whiterabbit.com>',
-          to: updatedOrder.email,
-          subject: 'Order Shipped - White Rabbit',
-          html: `<div style="font-family: serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #333; border-radius: 20px; background: #000; color: #fff;">
-            <h1 style="color: #fff; text-align: center; letter-spacing: 2px;">WHITE RABBIT</h1>
-            <p style="color: #666; font-style: italic;">The rabbit is on the move.</p>
-            <hr style="border-color: #333;">
-            <div style="margin-top: 20px;">
-              <p>Order <strong>#${updatedOrder.id.slice(0, 8)}</strong> has been shipped.</p>
-              <p>Tracking Number: <span style="font-family: monospace; color: #00ffff;">${trackingNumber}</span></p>
-              <p style="margin-top: 40px; color: #666; font-size: 12px;">Your artifacts will arrive shortly.</p>
-            </div>
-          </div>`,
-        });
-      } catch (emailError) {
-        console.error('Email failed:', emailError);
-      }
-    }
+    // Send Shipping Confirmation via Gmail
+    const mailOptions = {
+      from: `"White Rabbit" <${process.env.GMAIL_USER}>`,
+      to: updatedOrder.email,
+      subject: `Order Shipped #${updatedOrder.id.slice(0, 8)} - White Rabbit`,
+      html: `
+        <div style="font-family: serif; max-width: 600px; margin: 0 auto; padding: 40px; background: #000; color: #fff; border: 1px solid #333; border-radius: 30px;">
+          <h1 style="text-align: center; letter-spacing: 5px; color: #fff; margin-bottom: 40px;">WHITE RABBIT</h1>
+          <p style="font-style: italic; color: #00ffff; text-align: center; margin-bottom: 40px;">The rabbit is on the move.</p>
+          <div style="border-top: 1px solid #222; padding-top: 30px; line-height: 1.6;">
+            <p>Your artifacts have been dispatched.</p>
+            <p>Tracking Code: <span style="font-family: monospace; color: #bfff00; font-size: 20px; letter-spacing: 2px;">${trackingNumber}</span></p>
+          </div>
+          <div style="margin-top: 40px; text-align: center;">
+             <p style="color: #666; font-size: 11px;">Track your package via your preferred carrier with the code above.</p>
+          </div>
+          <p style="margin-top: 60px; text-align: center; font-size: 10px; color: #444; letter-spacing: 2px;">THE SEQUENCE COMPLETES SOON</p>
+        </div>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
 
     return { success: true };
   } catch (error) {
     console.error('Tracking update failed:', error);
-    return { success: false, error: 'Failed to update order status' };
+    return { success: false, error: 'Fulfillment error.' };
   }
 }
