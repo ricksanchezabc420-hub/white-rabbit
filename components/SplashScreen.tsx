@@ -40,10 +40,30 @@ export default function SplashScreen() {
             className="flex flex-col items-center relative z-10"
           >
             <div className="relative w-48 h-48 mb-8">
-              <img 
+              <motion.img 
                 src="/logo.png" 
                 alt="White Rabbit Neon Logo" 
-                className="w-full h-full object-contain filter drop-shadow-[0_0_20px_rgba(255,0,255,0.6)]"
+                initial={{ opacity: 0, filter: "brightness(0.1) drop-shadow(0 0 0px rgba(255,0,255,0))" }}
+                animate={{ 
+                  opacity: [0, 1, 0, 1, 0.5, 1, 0.8, 1],
+                  filter: [
+                    "brightness(0.1) drop-shadow(0 0 0px rgba(255,0,255,0))",
+                    "brightness(1.2) drop-shadow(0 0 20px rgba(255,0,255,0.8))",
+                    "brightness(0.1) drop-shadow(0 0 0px rgba(255,0,255,0))",
+                    "brightness(1.2) drop-shadow(0 0 20px rgba(255,0,255,0.8))",
+                    "brightness(0.5) drop-shadow(0 0 10px rgba(255,0,255,0.4))",
+                    "brightness(1.2) drop-shadow(0 0 20px rgba(255,0,255,0.8))",
+                    "brightness(0.8) drop-shadow(0 0 15px rgba(255,0,255,0.6))",
+                    "brightness(1) drop-shadow(0 0 20px rgba(255,0,255,0.6))"
+                  ]
+                }}
+                transition={{ 
+                  duration: 2.5,
+                  delay: 0.8,
+                  times: [0, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 1],
+                  ease: "easeInOut"
+                }}
+                className="w-full h-full object-contain"
               />
             </div>
             
