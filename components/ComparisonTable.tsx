@@ -26,7 +26,7 @@ export default function ComparisonTable() {
           <table className="w-full min-w-full text-left border-collapse table-fixed">
             <thead>
               <tr className="border-b border-white/10">
-                <th className="py-3 px-2 sm:py-6 sm:px-4 font-normal text-white/50 w-1/3 text-[10px] sm:text-base">Feature</th>
+                <th className="py-3 px-2 sm:py-6 sm:px-4 font-serif text-xs sm:text-2xl text-white/50 neon-glow-white w-1/3 bg-white/[0.02] rounded-tl-xl rounded-tr-xl border-x border-t border-white/10 text-center">Feature</th>
                 <th className="py-3 px-2 sm:py-6 sm:px-4 font-serif text-xs sm:text-2xl text-white neon-glow-blue w-1/3 bg-white/5 rounded-tl-xl rounded-tr-xl border-x border-t border-white/10 text-center">WHITE RABBIT</th>
                 <th className="py-3 px-2 sm:py-6 sm:px-4 font-serif text-xs sm:text-2xl text-white/80 neon-glow-red w-1/3 bg-red-500/5 rounded-tl-xl rounded-tr-xl border-x border-t border-white/10 text-center">Traditional Methods</th>
               </tr>
@@ -41,7 +41,7 @@ export default function ComparisonTable() {
                   transition={{ delay: idx * 0.1 }}
                   className="border-b border-white/5 hover:bg-white/[0.02] transition-colors"
                 >
-                  <td className="py-3 px-1 sm:py-5 sm:px-4 font-light text-white/80 text-[10px] sm:text-base">{row.feature}</td>
+                  <td className="py-3 px-1 sm:py-5 sm:px-4 font-light text-white/80 bg-white/[0.02] border-x border-white/10 text-[10px] sm:text-base text-center">{row.feature}</td>
                   <td className="py-3 px-1 sm:py-5 sm:px-4 font-medium text-electric-blue bg-white/5 border-x border-white/10 text-[10px] sm:text-base">
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3">
                       <Check className="w-3 h-3 sm:w-5 sm:h-5 text-acid-green shrink-0" /> 
@@ -59,7 +59,7 @@ export default function ComparisonTable() {
             </tbody>
           </table>
           <div className="flex w-full">
-            <div className="w-1/3" />
+            <div className="h-4 bg-white/[0.02] border-x border-b border-white/10 rounded-bl-xl rounded-br-xl w-1/3" />
             <div className="h-4 bg-white/5 border-x border-b border-white/10 rounded-bl-xl rounded-br-xl w-1/3" />
             <div className="h-4 bg-red-500/5 border-x border-b border-white/10 rounded-bl-xl rounded-br-xl w-1/3" />
           </div>
