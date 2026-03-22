@@ -17,7 +17,7 @@ export default function Hero() {
   }, [isEntered]);
 
   return (
-    <section className="relative min-h-[80vh] md:min-h-screen flex flex-col items-center justify-start md:justify-center text-center px-4 overflow-hidden pt-24 md:pt-0">
+    <section className="relative min-h-[80vh] md:min-h-screen flex flex-col items-center justify-center text-center px-4 overflow-hidden">
       {/* Background Video (Muted, Loop) */}
       <div className="absolute inset-0 z-[-1] bg-black">
         <video 
@@ -56,7 +56,7 @@ export default function Hero() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => document.getElementById('collection')?.scrollIntoView({ behavior: 'smooth' })}
-          className="absolute bottom-24 md:bottom-10 bg-neon-pink text-black px-4 py-2 rounded-full font-serif font-bold text-xs hover:shadow-[0_0_40px_rgba(255,0,255,0.6)] transition-shadow duration-300"
+          className="absolute bottom-16 md:bottom-10 bg-neon-pink text-black px-4 py-2 rounded-full font-serif font-bold text-xs hover:shadow-[0_0_40px_rgba(255,0,255,0.6)] transition-shadow duration-300"
         >
           Explore the Collection
         </motion.button>
