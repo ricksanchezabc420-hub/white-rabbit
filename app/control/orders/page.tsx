@@ -1,5 +1,6 @@
 'use client';
 
+// Diagnostic: Trigger version 2.1 deployment for fulfillment hub
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getOrders, updateOrderTracking } from '@/app/actions/orderActions';
