@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAccount, useSendTransaction } from 'wagmi';
 import { parseEther } from 'viem';
+import { createOrder } from '@/app/actions/orderActions';
 
 export default function CheckoutPage() {
   const { items, getCartTotal, getCartTotalCAD, clearCart } = useCartStore();
