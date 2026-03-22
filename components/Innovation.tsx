@@ -39,6 +39,8 @@ export default function Innovation() {
         />
         {/* Gradient wash corresponding to our dark mode UI */}
         <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent hidden md:block" />
+        {/* Top fade for mobile only - smooth transition from section above */}
+        <div className="absolute top-0 left-0 w-full h-[20%] bg-gradient-to-b from-black to-transparent md:hidden" />
         {/* Bottom fade for all devices - extended deeper into the image */}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 via-40% to-transparent" />
       </div>

@@ -31,7 +31,7 @@ export default function Hero() {
         />
         {/* Mobile top and bottom black fade for better video blending */}
         <div className="absolute top-0 left-0 w-full h-[35%] bg-gradient-to-b from-black via-black/80 to-transparent md:hidden pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-full h-[35%] bg-gradient-to-t from-black via-black/80 to-transparent md:hidden pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-full h-[15%] bg-gradient-to-t from-black via-black/80 to-transparent md:hidden pointer-events-none" />
         
         {/* Dark overlay to ensure text readability */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black pointer-events-none" />

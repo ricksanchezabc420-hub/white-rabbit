@@ -93,7 +93,7 @@ export default function SplashScreen() {
                     whileHover={{ scale: 1.05, boxShadow: "0 0 25px rgba(255,255,255,0.2)" }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setShowAgeVerification(true)}
-                    className="px-10 py-5 bg-transparent border border-white/20 hover:border-white/80 text-white rounded-full tracking-[0.2em] text-sm md:text-base uppercase transition-all duration-300"
+                    className="px-7 py-3.5 md:px-8 md:py-4 bg-transparent border border-white/20 hover:border-white/80 text-white rounded-full tracking-[0.2em] text-xs md:text-sm font-serif uppercase transition-all duration-300"
                   >
                     Enter the Rabbit Hole
                   </motion.button>

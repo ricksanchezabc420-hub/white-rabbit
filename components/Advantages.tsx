@@ -38,7 +38,7 @@ export default function Advantages() {
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-sm tracking-[0.2em] text-electric-blue uppercase mb-4">Core Advantages</h2>
-          <h3 className="text-4xl md:text-5xl font-serif">Designed for Different Surroundings</h3>
+          <h3 className="text-4xl md:text-5xl font-serif">Designed For Different Surroundings</h3>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-6">

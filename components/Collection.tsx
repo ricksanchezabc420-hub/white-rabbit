@@ -86,9 +86,7 @@ export default function Collection() {
 
               <div className="mt-auto flex flex-col items-center ext-center">
                 <h4 className={`text-lg sm:text-2xl font-serif mb-1 sm:mb-2 ${product.theme} tracking-wide text-center`}>{product.name}</h4>
-                <p className="text-xs sm:text-sm text-white/50 font-light mb-4 sm:mb-6 line-clamp-2 text-center">
-                  {product.description}
-                </p>
+                {/* Description removed for cleaner UI */}
                 <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-2 sm:gap-0">
                   <span className="font-mono text-base sm:text-lg group-hover:text-white transition-colors text-white/80">$30 <span className="text-[10px] sm:text-xs text-white/40">USDC</span></span>
                   
