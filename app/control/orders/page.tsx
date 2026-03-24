@@ -129,7 +129,7 @@ export default function FulfillmentPage() {
                   {/* Meta & Status */}
                   <div className="lg:w-1/4">
                     <div className="text-[10px] font-mono text-white/30 uppercase mb-1">Order Ref</div>
-                    <div className="text-lg font-mono mb-4 text-white">#{order.id.slice(0, 8)}</div>
+                    <div className="text-lg font-mono mb-4 text-white">WR{order.id}</div>
                     <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] uppercase font-bold tracking-widest ${
                       order.status === 'PENDING' ? 'bg-acid-green/10 text-acid-green' : 'bg-electric-blue/10 text-electric-blue'
                     }`}>

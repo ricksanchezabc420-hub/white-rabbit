@@ -142,28 +142,22 @@ export async function getShippingRates(addressData: any, unitCount: number) {
   }
 }
 
-import crypto from 'crypto';
-
 export async function createOrder(orderData: any) {
   try {
-    console.log('--- Incoming Order (v4.8) ---');
+    console.log('--- Incoming Order (v4.10) ---');
     
-    // v4.8 Data Cleaning
+    // v4.10 Strict Data Cleaning
     const addressStr = String(orderData.address || '').trim();
     if (!addressStr) {
       throw new Error("Address is required. Please re-select it in the autocomplete field.");
     }
 
-    // Explicitly generate ID (v4.8 uses Node crypto)
-    const orderId = crypto.randomUUID();
-
-    // v4.9 Mega-Safe JSON handling: Manually stringify or ensure object
+    // v4.10: Database now handles ID via serial/identity
     const itemsData = Array.isArray(orderData.items) ? orderData.items : JSON.parse(orderData.items || '[]');
 
     let newOrder;
     try {
       const results = await db.insert(orders).values({
-        id: orderId,
         paymentMethod: String(orderData.paymentMethod || 'E-TRANSFER').substring(0, 20),
         walletAddress: orderData.walletAddress ? String(orderData.walletAddress).substring(0, 42) : null,
         totalUsd: String(orderData.totalUsd), // Explicit String for decimal
@@ -180,7 +174,7 @@ export async function createOrder(orderData: any) {
       }).returning();
       newOrder = results[0];
     } catch (dbError: any) {
-      console.error('DB Insert Error (v4.9):', dbError);
+      console.error('DB Insert Error (v4.10):', dbError);
       throw new Error(`DB Fail: ${dbError.message || 'Check logs'}`);
     }
 
