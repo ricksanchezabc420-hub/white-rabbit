@@ -146,19 +146,41 @@ import { sql } from 'drizzle-orm';
 
 export async function createOrder(orderData: any) {
   try {
-    console.log('--- Incoming Order (v4.11 EMERGENCY RESET) ---');
+    console.log('--- Incoming Order (v4.12 NUKE & PAVE) ---');
     
-    // v4.11: ONE-TIME EMERGENCY RESET to clear the old UUID table
+    // v4.12: TOTAL RESET to ensure the table matches the new serial schema
     try {
-      console.log('Attempting forced schema reset...');
+      console.log('Forcing full database sync...');
       await db.execute(sql`DROP TABLE IF EXISTS orders CASCADE;`);
-      console.log('Reset successful.');
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS orders (
+          id SERIAL PRIMARY KEY,
+          payment_method VARCHAR(20) NOT NULL DEFAULT 'CRYPTO',
+          wallet_address VARCHAR(42),
+          transaction_hash VARCHAR(66) UNIQUE,
+          status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+          total_usd DECIMAL(10, 2) NOT NULL,
+          shipping_name VARCHAR(255) NOT NULL,
+          email VARCHAR(255) NOT NULL,
+          address VARCHAR(255) NOT NULL,
+          city VARCHAR(255) NOT NULL,
+          state_province VARCHAR(255) NOT NULL,
+          postal_code VARCHAR(50) NOT NULL,
+          country VARCHAR(100) NOT NULL,
+          items JSONB NOT NULL,
+          shipping_cost DECIMAL(10, 2),
+          shipping_service VARCHAR(100),
+          tracking_number VARCHAR(255),
+          shipped_at TIMESTAMP,
+          label_url VARCHAR(500),
+          created_at TIMESTAMP NOT NULL DEFAULT NOW()
+        );
+        ALTER SEQUENCE orders_id_seq RESTART WITH 1000;
+      `);
+      console.log('Sync complete.');
     } catch (resetError) {
-      console.log('Reset bypassed or failed (table might already be clean).');
+      console.log('Sync redundant or failed:', resetError);
     }
-
-    // v4.11 Strict Data Cleaning
-    const addressStr = String(orderData.address || '').trim();
     if (!addressStr) {
       throw new Error("Address is required. Please re-select it in the autocomplete field.");
     }
