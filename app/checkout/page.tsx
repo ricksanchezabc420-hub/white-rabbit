@@ -58,7 +58,7 @@ export default function CheckoutPage() {
         ...formData,
         paymentMethod,
         totalUsd: total.toString(),
-        items: JSON.stringify(items),
+        items: items, // Pass as object for the JSON column
         walletAddress: isConnected ? 'CONNECTED' : null, // Simplified for now
       });
 
