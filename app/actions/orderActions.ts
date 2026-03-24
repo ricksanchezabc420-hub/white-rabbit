@@ -144,30 +144,44 @@ export async function getShippingRates(addressData: any, unitCount: number) {
 
 export async function createOrder(orderData: any) {
   try {
-    console.log('--- Incoming Order (v4.6) ---');
+    console.log('--- Incoming Order (v4.7) ---');
     console.log('Address:', orderData.address);
-    console.log('Items:', Array.isArray(orderData.items) ? 'Array' : typeof orderData.items);
 
-    // v4.6 Strict Validation
+    // v4.7 Strict Validation
     if (!orderData.address || String(orderData.address).trim() === '') {
       throw new Error("Address is required. Please re-select it in the autocomplete field.");
     }
 
-    const [newOrder] = await db.insert(orders).values({
-      paymentMethod: orderData.paymentMethod,
-      walletAddress: orderData.walletAddress,
-      totalUsd: orderData.totalUsd,
-      shippingName: orderData.shippingName,
-      email: orderData.email,
-      address: orderData.address,
-      city: orderData.city,
-      stateProvince: orderData.stateProvince,
-      postalCode: orderData.postalCode,
-      country: orderData.country,
-      items: orderData.items,
-      shippingCost: orderData.shippingCost,
-      shippingService: orderData.shippingService,
-    }).returning();
+    // Explicitly generate ID to avoid pgcrypto dependency issues
+    const orderId = crypto.randomUUID();
+
+    let newOrder;
+    try {
+      const results = await db.insert(orders).values({
+        id: orderId, // EXPLICIT ID
+        paymentMethod: orderData.paymentMethod,
+        walletAddress: orderData.walletAddress,
+        totalUsd: orderData.totalUsd,
+        shippingName: orderData.shippingName,
+        email: orderData.email,
+        address: orderData.address,
+        city: orderData.city,
+        stateProvince: orderData.stateProvince,
+        postalCode: orderData.postalCode,
+        country: orderData.country,
+        items: orderData.items,
+        shippingCost: orderData.shippingCost,
+        shippingService: orderData.shippingService,
+      }).returning();
+      newOrder = results[0];
+    } catch (dbError: any) {
+      console.error('DB Insert Error Detail:', dbError);
+      throw new Error(`Database Error: ${dbError.message || 'Check database constraints or pgcrypto extension.'}`);
+    }
+
+    if (!newOrder) {
+      throw new Error("Failed to retrieve the inserted order record.");
+    }
 
     // Send Confirmation via Gmail
     try {
