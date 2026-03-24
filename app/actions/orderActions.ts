@@ -5,10 +5,18 @@ import { orders } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import nodemailer from 'nodemailer';
 const getShippoClient = () => {
-  if (process.env.SHIPPO_API_KEY) {
-    return require('shippo')(process.env.SHIPPO_API_KEY);
+  const key = process.env.SHIPPO_API_KEY;
+  if (!key) return null;
+  
+  try {
+    const shippoPkg = require('shippo');
+    // In Next.js/Vercel environments, CommonJS packages might be at .default
+    const Shippo = shippoPkg.default || shippoPkg;
+    return Shippo(key);
+  } catch (e) {
+    console.error('Shippo init failed:', e);
+    return null;
   }
-  return null;
 };
 
 const transporter = nodemailer.createTransport({
