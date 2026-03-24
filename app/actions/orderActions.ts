@@ -144,6 +144,11 @@ export async function getShippingRates(addressData: any, unitCount: number) {
 
 export async function createOrder(orderData: any) {
   try {
+    // v4.5 Validation before insert
+    if (!orderData.address || orderData.address.trim() === '') {
+      throw new Error("Address is missing. Please select a valid address from the autocomplete suggestions.");
+    }
+
     const [newOrder] = await db.insert(orders).values({
       ...orderData,
       items: orderData.items, 

@@ -7,7 +7,6 @@ import '@geoapify/geocoder-autocomplete/styles/minimal.css';
 interface AddressAutocompleteProps {
   apiKey: string;
   onAddressSelected: (address: any) => void;
-  onInputChange?: (value: string) => void;
   placeholder?: string;
   value?: string;
 }
