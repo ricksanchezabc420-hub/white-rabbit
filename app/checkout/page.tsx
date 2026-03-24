@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ShieldCheck, Wallet, Truck, Package, Info, CheckCircle2 } from 'lucide-react';
 import { useAccount, useSendTransaction } from 'wagmi';
 import { parseEther } from 'viem';
-import useCartStore from '@/store/useCartStore';
+import { useCartStore } from '@/store/useCartStore';
 import { getShippingRates, createOrder } from '@/app/actions/orderActions';
 import AddressAutocomplete from '@/components/AddressAutocomplete';
 
@@ -55,7 +55,7 @@ export default function CheckoutPage() {
     setIsLoading(true);
     
     try {
-      const unitCount = items.reduce((acc, item) => acc + item.quantity, 0);
+      const unitCount = items.reduce((acc: number, item: any) => acc + item.quantity, 0);
       const result = await getShippingRates(formData, unitCount);
       
       if (result.success && result.rate) {
@@ -211,7 +211,7 @@ export default function CheckoutPage() {
           <div className="glass p-8 rounded-3xl sticky top-24">
             <h3 className="text-xl font-serif mb-6">Order Summary</h3>
             <div className="space-y-4 mb-6">
-              {items.map(item => (
+              {items.map((item: any) => (
                 <div key={item.id} className="flex justify-between items-center text-sm">
                   <div className="flex items-center gap-3">
                     <span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs text-white/50">{item.quantity}</span>
