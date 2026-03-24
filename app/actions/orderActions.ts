@@ -4,7 +4,12 @@ import { db } from '@/db';
 import { orders } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import nodemailer from 'nodemailer';
-const shippo = require('shippo')(process.env.SHIPPO_API_KEY);
+const getShippoClient = () => {
+  if (process.env.SHIPPO_API_KEY) {
+    return require('shippo')(process.env.SHIPPO_API_KEY);
+  }
+  return null;
+};
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -23,8 +28,8 @@ export async function getShippingRates(addressData: any, unitCount: number) {
         ? { length: 38, width: 26, height: 6 } 
         : { length: 40, width: 30, height: 15 };
 
-    // Fallback for testing without API Key
-    if (!process.env.SHIPPO_API_KEY) {
+    const shippo = getShippoClient();
+    if (!shippo) {
       console.log('SHIPPO_API_KEY missing - returning mock rate for testing.');
       return { 
         success: true, 
