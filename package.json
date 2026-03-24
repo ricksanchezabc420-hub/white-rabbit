@@ -11,6 +11,8 @@
   "dependencies": {
     "@base-org/account": "^2.5.2",
     "@coinbase/wallet-sdk": "^4.3.7",
+    "@geoapify/geocoder-autocomplete": "^3.0.1",
+    "@geoapify/react-geocoder-autocomplete": "^3.0.0",
     "@metamask/sdk": "^0.34.0",
     "@neondatabase/serverless": "latest",
     "@safe-global/safe-apps-provider": "^0.18.6",

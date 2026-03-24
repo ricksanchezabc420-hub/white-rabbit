@@ -1,41 +1,58 @@
 'use client';
 
-import { useState } from 'react';
-import { useCartStore } from '@/store/useCartStore';
-import { motion } from 'framer-motion';
-import { ArrowLeft, CheckCircle2, ShieldCheck, Wallet } from 'lucide-react';
-import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, ShieldCheck, Wallet, Truck, Package, Info, CheckCircle2 } from 'lucide-react';
 import { useAccount, useSendTransaction } from 'wagmi';
 import { parseEther } from 'viem';
-import { createOrder, getShippingRates } from '@/app/actions/orderActions';
+import useCartStore from '@/store/useCartStore';
+import { getShippingRates, createOrder } from '@/app/actions/orderActions';
+import AddressAutocomplete from '@/components/AddressAutocomplete';
 
 export default function CheckoutPage() {
-  const { items, getCartTotal, getCartTotalUSDC, clearCart } = useCartStore();
   const router = useRouter();
+  const { items, getCartTotal, clearCart, getCartTotalUSDC } = useCartStore();
   const { isConnected } = useAccount();
   const { sendTransactionAsync } = useSendTransaction();
   
   const [step, setStep] = useState<1 | 2 | 3>(1); // 1: Shipping, 2: Payment, 3: Success
+  const [isLoading, setIsLoading] = useState(false);
+  const [shippingRate, setShippingRate] = useState<any>(null);
   const [paymentMethod, setPaymentMethod] = useState<'CRYPTO' | 'E-TRANSFER'>('CRYPTO');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isCalculatingShipping, setIsCalculatingShipping] = useState(false);
-  const [shippingRate, setShippingRate] = useState<any>(null);
 
-  // Form State
   const [formData, setFormData] = useState({
-    shippingName: '', email: '', address: '', city: '', stateProvince: '', postalCode: '', country: 'CA'
+    shippingName: '',
+    email: '',
+    address: '',
+    city: '',
+    stateProvince: '',
+    postalCode: '',
+    country: 'CA',
   });
 
   const subtotal = getCartTotal();
   const isFreeShipping = subtotal >= 150;
   const shippingCharge = isFreeShipping ? 0 : (shippingRate ? parseFloat(shippingRate.amount) : 0);
   const totalCad = subtotal + shippingCharge;
-  const totalUsdc = totalCad * 0.75; // Approx conversion to USDC for payment
+  const totalUsdc = totalCad * 0.75; 
+
+  const handleAddressSelected = (addressData: any) => {
+    setFormData((prev) => ({
+      ...prev,
+      address: addressData.address,
+      city: addressData.city,
+      stateProvince: addressData.stateProvince,
+      postalCode: addressData.postalCode,
+      country: addressData.country
+    }));
+  };
 
   const handleContinueToPayment = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsCalculatingShipping(true);
+    setIsLoading(true);
     
     try {
       const unitCount = items.reduce((acc, item) => acc + item.quantity, 0);
@@ -51,7 +68,7 @@ export default function CheckoutPage() {
       console.error(error);
       alert('Error calculating shipping.');
     } finally {
-      setIsCalculatingShipping(false);
+      setIsLoading(false);
     }
   };
 
@@ -65,22 +82,20 @@ export default function CheckoutPage() {
           setIsProcessing(false);
           return;
         }
-        // Mocking a USDC/ETH transaction for demonstration (0.001 ETH roughly maps to a test transaction)
         await sendTransactionAsync({
-          to: '0x0000000000000000000000000000000000000000', // Dead address for demo
+          to: '0x0000000000000000000000000000000000000000', 
           value: parseEther('0.001'),
         });
       }
 
-      // Save to Database
       const result = await createOrder({
         ...formData,
         paymentMethod,
-        totalUsd: totalUsdc.toFixed(2), // Final crypto amount paid
+        totalUsd: totalUsdc.toFixed(2),
         shippingCost: shippingCharge.toFixed(2),
         shippingService: shippingRate ? shippingRate.servicelevel.name : 'Canada Post Expedited Parcel',
-        items: items, // Pass as object for the JSON column
-        walletAddress: isConnected ? 'CONNECTED' : null, // Simplified for now
+        items: JSON.stringify(items), 
+        walletAddress: isConnected ? 'CONNECTED' : null, 
       });
 
       if (!result.success) {
@@ -114,17 +129,31 @@ export default function CheckoutPage() {
               <h2 className="text-xl font-medium mb-6 flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-neon-pink" /> 1. Shipping Details</h2>
               <form className="space-y-4" onSubmit={handleContinueToPayment}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input required placeholder="Full Name" className="w-full bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-neon-pink transition-colors" onChange={e => setFormData({...formData, shippingName: e.target.value})} />
-                  <input required type="email" placeholder="Email Address" className="w-full bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-neon-pink transition-colors" onChange={e => setFormData({...formData, email: e.target.value})} />
+                  <input required placeholder="Full Name" value={formData.shippingName} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-neon-pink transition-colors" onChange={e => setFormData({...formData, shippingName: e.target.value})} />
+                  <input required type="email" placeholder="Email Address" value={formData.email} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-neon-pink transition-colors" onChange={e => setFormData({...formData, email: e.target.value})} />
                 </div>
-                <input required placeholder="Street Address" className="w-full bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-neon-pink transition-colors" onChange={e => setFormData({...formData, address: e.target.value})} />
+                
+                <AddressAutocomplete 
+                  apiKey="660bbb1dddbf4c0b9bc552fed57864f9"
+                  onAddressSelected={handleAddressSelected}
+                  placeholder="Street Address (Autocomplete)"
+                  value={formData.address}
+                />
+
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <input required placeholder="City" className="col-span-2 bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-neon-pink transition-colors" onChange={e => setFormData({...formData, city: e.target.value})} />
-                  <input required placeholder="State / Prov" className="bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-neon-pink transition-colors" onChange={e => setFormData({...formData, stateProvince: e.target.value})} />
-                  <input required placeholder="ZIP / Postal" className="bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-neon-pink transition-colors" onChange={e => setFormData({...formData, postalCode: e.target.value})} />
+                  <input required placeholder="City" value={formData.city} className="col-span-2 bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-neon-pink transition-colors" onChange={e => setFormData({...formData, city: e.target.value})} />
+                  <input required placeholder="State / Prov" value={formData.stateProvince} className="bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-neon-pink transition-colors" onChange={e => setFormData({...formData, stateProvince: e.target.value})} />
+                  <input required placeholder="ZIP / Postal" value={formData.postalCode} className="bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-neon-pink transition-colors" onChange={e => setFormData({...formData, postalCode: e.target.value})} />
                 </div>
-                <input required placeholder="Country" className="w-full bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-neon-pink transition-colors" onChange={e => setFormData({...formData, country: e.target.value})} />
-                <button type="submit" className="w-full mt-6 bg-white text-black py-4 rounded-xl font-bold hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all">Continue to Payment</button>
+                <input required placeholder="Country" value={formData.country} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-neon-pink transition-colors" onChange={e => setFormData({...formData, country: e.target.value})} />
+                
+                <button 
+                  type="submit" 
+                  disabled={isLoading}
+                  className="w-full mt-6 bg-white text-black py-4 rounded-xl font-bold hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all flex items-center justify-center gap-2"
+                >
+                  {isLoading ? <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" /> : 'Continue to Payment'}
+                </button>
               </form>
             </motion.div>
           )}
@@ -153,13 +182,13 @@ export default function CheckoutPage() {
                 </div>
               )}
 
-                <button 
-                  onClick={handleProcessOrder}
-                  disabled={isProcessing}
-                  className="w-full bg-neon-pink text-black py-4 rounded-xl font-bold hover:shadow-[0_0_20px_rgba(255,0,255,0.5)] transition-all disabled:opacity-50"
-                >
-                  {isProcessing ? 'Processing...' : `Place Order • $${totalUsdc.toFixed(2)} USDC`}
-                </button>
+              <button 
+                onClick={handleProcessOrder}
+                disabled={isProcessing}
+                className="w-full bg-neon-pink text-black py-4 rounded-xl font-bold hover:shadow-[0_0_20px_rgba(255,0,255,0.5)] transition-all disabled:opacity-50"
+              >
+                {isProcessing ? 'Processing...' : `Place Order • $${totalUsdc.toFixed(2)} USDC`}
+              </button>
             </motion.div>
           )}
 
