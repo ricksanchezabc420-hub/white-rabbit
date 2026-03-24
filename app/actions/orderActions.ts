@@ -144,14 +144,29 @@ export async function getShippingRates(addressData: any, unitCount: number) {
 
 export async function createOrder(orderData: any) {
   try {
-    // v4.5 Validation before insert
-    if (!orderData.address || orderData.address.trim() === '') {
-      throw new Error("Address is missing. Please select a valid address from the autocomplete suggestions.");
+    console.log('--- Incoming Order (v4.6) ---');
+    console.log('Address:', orderData.address);
+    console.log('Items:', Array.isArray(orderData.items) ? 'Array' : typeof orderData.items);
+
+    // v4.6 Strict Validation
+    if (!orderData.address || String(orderData.address).trim() === '') {
+      throw new Error("Address is required. Please re-select it in the autocomplete field.");
     }
 
     const [newOrder] = await db.insert(orders).values({
-      ...orderData,
-      items: orderData.items, 
+      paymentMethod: orderData.paymentMethod,
+      walletAddress: orderData.walletAddress,
+      totalUsd: orderData.totalUsd,
+      shippingName: orderData.shippingName,
+      email: orderData.email,
+      address: orderData.address,
+      city: orderData.city,
+      stateProvince: orderData.stateProvince,
+      postalCode: orderData.postalCode,
+      country: orderData.country,
+      items: orderData.items,
+      shippingCost: orderData.shippingCost,
+      shippingService: orderData.shippingService,
     }).returning();
 
     // Send Confirmation via Gmail
