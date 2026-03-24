@@ -76,18 +76,29 @@ export async function getShippingRates(addressData: any, unitCount: number) {
 
     if (!response.ok) {
       const errData = await response.json();
-      throw new Error(errData.message || 'Shippo API Request Failed');
+      throw new Error(`[API Status ${response.status}] ${JSON.stringify(errData.message || errData)}`);
     }
 
     const result = await response.json();
     
-    const rates = result.rates.filter((r: any) => 
+    // Check if shipment itself has nested messages/errors
+    if (result.messages && result.messages.length > 0) {
+      const msg = result.messages[0];
+      if (msg.code === 'ERROR') {
+        throw new Error(`Shippo Logistics Error: ${msg.text}`);
+      }
+    }
+
+    // Select the best rate (Expedited Parcel preferred)
+    const availableRates = result.rates || [];
+    const rates = availableRates.filter((r: any) => 
       r.servicelevel.token === 'canadapost_expedited_parcel'
     );
-    const rate = rates.length > 0 ? rates[0] : result.rates[0];
+    const rate = rates.length > 0 ? rates[0] : availableRates[0];
 
     if (!rate) {
-      throw new Error('No shipping rates available for this location.');
+      const detail = result.messages?.map((m: any) => m.text).join(', ') || 'Address/Service level mismatch';
+      throw new Error(`Carrier Unreachable (v4.1): ${detail}`);
     }
 
     return { 
@@ -104,7 +115,7 @@ export async function getShippingRates(addressData: any, unitCount: number) {
     };
   } catch (error: any) {
     console.error('REST Shipping error:', error);
-    return { success: false, error: `Logistics Error: ${error.message}` };
+    return { success: false, error: `Logistics Transmission (v4.1): ${error.message}` };
   }
 }
 
