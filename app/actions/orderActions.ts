@@ -142,11 +142,22 @@ export async function getShippingRates(addressData: any, unitCount: number) {
   }
 }
 
+import { sql } from 'drizzle-orm';
+
 export async function createOrder(orderData: any) {
   try {
-    console.log('--- Incoming Order (v4.10) ---');
+    console.log('--- Incoming Order (v4.11 EMERGENCY RESET) ---');
     
-    // v4.10 Strict Data Cleaning
+    // v4.11: ONE-TIME EMERGENCY RESET to clear the old UUID table
+    try {
+      console.log('Attempting forced schema reset...');
+      await db.execute(sql`DROP TABLE IF EXISTS orders CASCADE;`);
+      console.log('Reset successful.');
+    } catch (resetError) {
+      console.log('Reset bypassed or failed (table might already be clean).');
+    }
+
+    // v4.11 Strict Data Cleaning
     const addressStr = String(orderData.address || '').trim();
     if (!addressStr) {
       throw new Error("Address is required. Please re-select it in the autocomplete field.");
