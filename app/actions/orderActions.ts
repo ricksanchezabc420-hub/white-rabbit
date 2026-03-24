@@ -146,20 +146,12 @@ import { sql } from 'drizzle-orm';
 
 export async function createOrder(orderData: any) {
   try {
-    console.log('--- Incoming Order (v4.14 NUKE & PAVE) ---');
+    console.log('--- Incoming Order (v4.15 V2 MIGRATION) ---');
     
-    // v4.14 Strict Data Cleaning
-    const addressStr = String(orderData.address || '').trim();
-    if (!addressStr) {
-      throw new Error("Address is required. Please re-select it in the autocomplete field.");
-    }
-
-    // v4.14: TOTAL RESET to ensure the table matches the new serial schema
+    // v4.15: Autonomous creation of the new orders_v2 table
     try {
-      console.log('Forcing full database sync (v4.14)...');
-      await db.execute(sql`DROP TABLE IF EXISTS orders CASCADE;`);
       await db.execute(sql`
-        CREATE TABLE IF NOT EXISTS orders (
+        CREATE TABLE IF NOT EXISTS orders_v2 (
           id SERIAL PRIMARY KEY,
           payment_method VARCHAR(20) NOT NULL DEFAULT 'CRYPTO',
           wallet_address VARCHAR(42),
@@ -181,12 +173,21 @@ export async function createOrder(orderData: any) {
           label_url VARCHAR(500),
           created_at TIMESTAMP NOT NULL DEFAULT NOW()
         );
-        ALTER SEQUENCE orders_id_seq RESTART WITH 1000;
+        -- Ensure sequence starts at 1000 for the new table
+        DO $$ 
+        BEGIN 
+          IF (SELECT last_value FROM orders_v2_id_seq) < 1000 THEN
+            ALTER SEQUENCE orders_v2_id_seq RESTART WITH 1000;
+          END IF;
+        END $$;
       `);
-      console.log('Sync complete.');
-    } catch (resetError) {
-      console.log('Sync redundant or failed:', resetError);
+      console.log('Orders v2 initialization handled.');
+    } catch (e) {
+      console.log('Skipping v2 table creation check.');
     }
+
+    // v4.15 Strict Data Cleaning
+    const addressStr = String(orderData.address || '').trim();
     if (!addressStr) {
       throw new Error("Address is required. Please re-select it in the autocomplete field.");
     }
