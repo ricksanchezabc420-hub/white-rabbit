@@ -40,11 +40,14 @@ export async function getShippingRates(addressData: any, unitCount: number) {
     const SHIPPO_KEY = getShippoKey();
     const isTest = SHIPPO_KEY.startsWith('shippo_test_');
     
+    console.log('Shippo Request (v4.3):', { isTest, key: SHIPPO_KEY.substring(0, 15) + '...' });
+
     const response = await fetch('https://api.goshippo.com/shipments/', {
       method: 'POST',
       headers: {
         'Authorization': `ShippoToken ${SHIPPO_KEY}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Shippo-API-Version': '2018-02-08'
       },
       body: JSON.stringify({
         address_from: {
@@ -100,7 +103,7 @@ export async function getShippingRates(addressData: any, unitCount: number) {
 
     if (!rate) {
       const detail = result.messages?.map((m: any) => m.text).join(', ') || 'Address/Service level mismatch';
-      throw new Error(`Carrier Unreachable (v4.1): ${detail}`);
+      throw new Error(`Carrier Unreachable (v4.3): ${detail}`);
     }
 
     return { 
