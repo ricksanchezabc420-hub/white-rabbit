@@ -23,6 +23,19 @@ export async function getShippingRates(addressData: any, unitCount: number) {
         ? { length: 38, width: 26, height: 6 } 
         : { length: 40, width: 30, height: 15 };
 
+    // Fallback for testing without API Key
+    if (!process.env.SHIPPO_API_KEY) {
+      console.log('SHIPPO_API_KEY missing - returning mock rate for testing.');
+      return { 
+        success: true, 
+        rate: { 
+          amount: "15.00", 
+          currency: "USD",
+          servicelevel: { name: "Canada Post Expedited Parcel (MOCK)", token: "canadapost_expedited_parcel" }
+        } 
+      };
+    }
+
     const shipment = await shippo.shipment.create({
       address_from: {
         name: 'White Rabbit Warehouse',
