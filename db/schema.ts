@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, decimal, timestamp, integer, json } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, decimal, timestamp, integer, json, jsonb } from 'drizzle-orm/pg-core';
 
 export const products = pgTable('products', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -23,7 +23,7 @@ export const orders = pgTable('orders', {
   stateProvince: varchar('state_province', { length: 255 }).notNull(),
   postalCode: varchar('postal_code', { length: 50 }).notNull(),
   country: varchar('country', { length: 100 }).notNull(),
-  items: json('items').$type<any[]>().notNull(), // Switched to jsonb if imported, but using json with type
+  items: jsonb('items').notNull(), 
   shippingCost: decimal('shipping_cost', { precision: 10, scale: 2 }),
   shippingService: varchar('shipping_service', { length: 100 }),
   trackingNumber: varchar('tracking_number', { length: 255 }),

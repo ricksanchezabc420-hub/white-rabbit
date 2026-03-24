@@ -157,13 +157,16 @@ export async function createOrder(orderData: any) {
     // Explicitly generate ID (v4.8 uses Node crypto)
     const orderId = crypto.randomUUID();
 
+    // v4.9 Mega-Safe JSON handling: Manually stringify or ensure object
+    const itemsData = Array.isArray(orderData.items) ? orderData.items : JSON.parse(orderData.items || '[]');
+
     let newOrder;
     try {
       const results = await db.insert(orders).values({
         id: orderId,
         paymentMethod: String(orderData.paymentMethod || 'E-TRANSFER').substring(0, 20),
         walletAddress: orderData.walletAddress ? String(orderData.walletAddress).substring(0, 42) : null,
-        totalUsd: orderData.totalUsd, // Drizzle decimal handles string-number
+        totalUsd: String(orderData.totalUsd), // Explicit String for decimal
         shippingName: String(orderData.shippingName || 'No Name').substring(0, 255),
         email: String(orderData.email || '').substring(0, 255),
         address: addressStr.substring(0, 255),
@@ -171,14 +174,14 @@ export async function createOrder(orderData: any) {
         stateProvince: String(orderData.stateProvince || '').substring(0, 255),
         postalCode: String(orderData.postalCode || '').substring(0, 50),
         country: String(orderData.country || 'CA').substring(0, 100),
-        items: orderData.items, 
-        shippingCost: orderData.shippingCost || "0.00",
+        items: itemsData, // Drizzle handles jsonb if object is passed
+        shippingCost: String(orderData.shippingCost || "0.00"),
         shippingService: String(orderData.shippingService || 'Standard').substring(0, 100),
       }).returning();
       newOrder = results[0];
     } catch (dbError: any) {
-      console.error('DB Insert Error (v4.8):', dbError);
-      throw new Error(`Database Error: ${dbError.message || 'Constraint violation or connection timeout.'}`);
+      console.error('DB Insert Error (v4.9):', dbError);
+      throw new Error(`DB Fail: ${dbError.message || 'Check logs'}`);
     }
 
     if (!newOrder) {
