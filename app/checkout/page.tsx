@@ -94,7 +94,7 @@ export default function CheckoutPage() {
         totalUsd: totalUsdc.toFixed(2),
         shippingCost: shippingCharge.toFixed(2),
         shippingService: shippingRate ? shippingRate.servicelevel.name : 'Canada Post Expedited Parcel',
-        items: JSON.stringify(items), 
+        items: items, // Pass directly as array (Drizzle handles JSONB)
         walletAddress: isConnected ? 'CONNECTED' : null, 
       });
 
@@ -187,7 +187,7 @@ export default function CheckoutPage() {
                 disabled={isProcessing}
                 className="w-full bg-neon-pink text-black py-4 rounded-xl font-bold hover:shadow-[0_0_20px_rgba(255,0,255,0.5)] transition-all disabled:opacity-50"
               >
-                {isProcessing ? 'Processing...' : `Place Order • $${totalUsdc.toFixed(2)} USDC`}
+                {isProcessing ? 'Processing...' : `Place Order • $${totalCad.toFixed(2)} CAD`}
               </button>
             </motion.div>
           )}

@@ -7,6 +7,7 @@ import '@geoapify/geocoder-autocomplete/styles/minimal.css';
 interface AddressAutocompleteProps {
   apiKey: string;
   onAddressSelected: (address: any) => void;
+  onInputChange?: (value: string) => void;
   placeholder?: string;
   value?: string;
 }
@@ -16,13 +17,22 @@ export default function AddressAutocomplete({ apiKey, onAddressSelected, placeho
   function onPlaceSelect(value: any) {
     if (!value) return;
     
-    const properties = value.properties;
+    const props = value.properties;
+    
+    // Construct address more robustly with multiple fallbacks
+    const streetAddress = [props.housenumber, props.street].filter(Boolean).join(' ') 
+      || props.address_line1 
+      || props.name 
+      || props.formatted
+      || props.city 
+      || 'Selected Location';
+
     const addressData = {
-      address: `${properties.housenumber || ''} ${properties.street || ''}`.trim() || properties.address_line1,
-      city: properties.city || properties.town || properties.village || '',
-      stateProvince: properties.state_code || properties.state || '',
-      postalCode: properties.postcode || '',
-      country: properties.country_code?.toUpperCase() || 'CA'
+      address: streetAddress,
+      city: props.city || props.town || props.village || props.suburb || 'Unknown City',
+      stateProvince: props.state_code || props.state || '',
+      postalCode: props.postcode || '',
+      country: props.country_code?.toUpperCase() || 'CA'
     };
     
     onAddressSelected(addressData);
