@@ -37,12 +37,13 @@ export async function getShippingRates(addressData: any, unitCount: number) {
         ? { length: 38, width: 26, height: 6 } 
         : { length: 40, width: 30, height: 15 };
 
-    const token = getShippoKey();
+    const SHIPPO_KEY = getShippoKey();
+    const isTest = SHIPPO_KEY.startsWith('shippo_test_');
     
     const response = await fetch('https://api.goshippo.com/shipments/', {
       method: 'POST',
       headers: {
-        'Authorization': `ShippoToken ${token}`,
+        'Authorization': `ShippoToken ${SHIPPO_KEY}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -71,6 +72,7 @@ export async function getShippingRates(addressData: any, unitCount: number) {
           mass_unit: 'g',
         }],
         async: false,
+        test: isTest,
       }),
     });
 
