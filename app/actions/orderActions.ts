@@ -101,9 +101,27 @@ export async function getShippingRates(addressData: any, unitCount: number) {
     );
     const rate = rates.length > 0 ? rates[0] : availableRates[0];
 
+    // v4.4 SMART FALLBACK: If we are in Test Mode and Shippo returned NO rates (common for CP sandbox), 
+    // provide a fixed rate so the user can test the rest of the flow.
+    if (!rate && isTest) {
+      console.warn('Shippo returned no test rates. Providing smart fallback for testing.');
+      return { 
+        success: true, 
+        rate: {
+          amount: "22.50",
+          currency: "CAD",
+          servicelevel: {
+            name: "Canada Post Expedited Parcel (Testing Fallback)",
+            token: "canadapost_expedited_parcel"
+          },
+          object_id: "test_fallback_" + Date.now()
+        } 
+      };
+    }
+
     if (!rate) {
       const detail = result.messages?.map((m: any) => m.text).join(', ') || 'Address/Service level mismatch';
-      throw new Error(`Carrier Unreachable (v4.3): ${detail}`);
+      throw new Error(`Carrier Unreachable (v4.4): ${detail}`);
     }
 
     return { 
@@ -120,7 +138,7 @@ export async function getShippingRates(addressData: any, unitCount: number) {
     };
   } catch (error: any) {
     console.error('REST Shipping error:', error);
-    return { success: false, error: `Logistics Transmission (v4.1): ${error.message}` };
+    return { success: false, error: `Logistics Transmission (v4.4): ${error.message}` };
   }
 }
 
