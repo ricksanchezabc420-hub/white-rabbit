@@ -144,15 +144,19 @@ export async function getShippingRates(addressData: any, unitCount: number) {
 
 import { sql } from 'drizzle-orm';
 
-    // v4.13 Strict Data Cleaning
+export async function createOrder(orderData: any) {
+  try {
+    console.log('--- Incoming Order (v4.14 NUKE & PAVE) ---');
+    
+    // v4.14 Strict Data Cleaning
     const addressStr = String(orderData.address || '').trim();
     if (!addressStr) {
       throw new Error("Address is required. Please re-select it in the autocomplete field.");
     }
 
-    // v4.13: TOTAL RESET to ensure the table matches the new serial schema
+    // v4.14: TOTAL RESET to ensure the table matches the new serial schema
     try {
-      console.log('Forcing full database sync (v4.13)...');
+      console.log('Forcing full database sync (v4.14)...');
       await db.execute(sql`DROP TABLE IF EXISTS orders CASCADE;`);
       await db.execute(sql`
         CREATE TABLE IF NOT EXISTS orders (
@@ -222,13 +226,13 @@ import { sql } from 'drizzle-orm';
       const mailOptions = {
         from: `"White Rabbit" <${process.env.GMAIL_USER}>`,
         to: newOrder.email,
-        subject: `The Hunt Begins: Order #${newOrder.id.slice(0, 8)}`,
+        subject: `The Hunt Begins: Order WR${newOrder.id}`,
         html: `
           <div style="font-family: serif; max-width: 600px; margin: 0 auto; padding: 40px; background: #000; color: #fff; border: 1px solid #333; border-radius: 30px;">
             <h1 style="text-align: center; letter-spacing: 5px; color: #fff; margin-bottom: 40px;">WHITE RABBIT</h1>
             <p style="font-style: italic; color: #00ffff; text-align: center; margin-bottom: 40px;">Order confirmed. The sequence is being prepared.</p>
             <div style="border-top: 1px solid #222; padding-top: 30px; line-height: 1.6;">
-              <p>Order ID: <span style="font-family: monospace; color: #bfff00;">${newOrder.id}</span></p>
+              <p>Order ID: <span style="font-family: monospace; color: #bfff00;">WR${newOrder.id}</span></p>
               <p>Total: <strong>$${newOrder.totalUsd} USDC</strong></p>
               ${newOrder.paymentMethod === 'E-TRANSFER' ? '<p style="color: #ff3e3e; font-weight: bold; border: 1px solid #ff3e3e; padding: 10px; border-radius: 10px; margin-top: 20px;">* ACTION REQUIRED: Please complete your E-transfer to pay@whiterabbit.com to begin production.</p>' : ''}
             </div>
