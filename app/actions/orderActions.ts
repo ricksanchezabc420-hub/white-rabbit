@@ -144,13 +144,15 @@ export async function getShippingRates(addressData: any, unitCount: number) {
 
 import { sql } from 'drizzle-orm';
 
-export async function createOrder(orderData: any) {
-  try {
-    console.log('--- Incoming Order (v4.12 NUKE & PAVE) ---');
-    
-    // v4.12: TOTAL RESET to ensure the table matches the new serial schema
+    // v4.13 Strict Data Cleaning
+    const addressStr = String(orderData.address || '').trim();
+    if (!addressStr) {
+      throw new Error("Address is required. Please re-select it in the autocomplete field.");
+    }
+
+    // v4.13: TOTAL RESET to ensure the table matches the new serial schema
     try {
-      console.log('Forcing full database sync...');
+      console.log('Forcing full database sync (v4.13)...');
       await db.execute(sql`DROP TABLE IF EXISTS orders CASCADE;`);
       await db.execute(sql`
         CREATE TABLE IF NOT EXISTS orders (
