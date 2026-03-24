@@ -80,9 +80,9 @@ export async function getShippingRates(addressData: any, unitCount: number) {
     }
 
     return { success: true, rate: rates[0] };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Shippo error:', error);
-    return { success: false, error: 'Failed to calculate shipping.' };
+    return { success: false, error: `Shippo error: ${error.message || 'Transmission interrupted.'}` };
   }
 }
 
