@@ -28,5 +28,6 @@ export const orders = pgTable('orders', {
   shippingService: varchar('shipping_service', { length: 100 }),
   trackingNumber: varchar('tracking_number', { length: 255 }),
   shippedAt: timestamp('shipped_at'),
+  labelUrl: varchar('label_url', { length: 500 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });

@@ -203,3 +203,119 @@ export async function updateOrderTracking(orderId: string, trackingNumber: strin
     return { success: false, error: 'Fulfillment error.' };
   }
 }
+
+export async function generateShippingLabel(orderId: string) {
+  try {
+    const order = await db.query.orders.findFirst({
+      where: eq(orders.id, orderId)
+    });
+    if (!order) throw new Error('Order not found.');
+
+    const shippo = getShippoClient();
+    if (!shippo) throw new Error('Shippo API key missing.');
+
+    // Calculate packaging logic based on the order's unit count
+    const itemsList = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
+    const unitCount = itemsList.reduce((acc: number, i: any) => acc + i.quantity, 0);
+    const weight = (unitCount * 175) + (unitCount <= 3 ? 50 : 100); // g
+    const dimensions = unitCount <= 3 
+      ? { length: 26, width: 19, height: 6 } 
+      : unitCount <= 8 
+        ? { length: 38, width: 26, height: 6 } 
+        : { length: 40, width: 30, height: 15 };
+
+    const shipment = await shippo.shipment.create({
+      address_from: {
+        name: 'White Rabbit Warehouse',
+        street1: '190 Northfield Dr West',
+        city: 'Waterloo',
+        state: 'ON',
+        zip: 'N2L 0A6',
+        country: 'CA',
+      },
+      address_to: {
+        name: order.shippingName,
+        street1: order.address,
+        city: order.city,
+        state: order.stateProvince,
+        zip: order.postalCode,
+        country: order.country,
+      },
+      parcels: [{
+        length: dimensions.length,
+        width: dimensions.width,
+        height: dimensions.height,
+        distance_unit: 'cm',
+        weight: weight,
+        mass_unit: 'g',
+      }],
+      async: false,
+    });
+
+    const rates = shipment.rates.filter((r: any) => 
+      r.servicelevel.token === 'canadapost_expedited_parcel'
+    );
+    const rate = rates.length > 0 ? rates[0] : shipment.rates[0];
+
+    // Purchase Transaction
+    const transaction = await shippo.transaction.create({
+      rate: rate.object_id,
+      label_file_type: 'PDF',
+      async: false,
+    });
+
+    if (transaction.status === 'ERROR') {
+      throw new Error(transaction.messages[0]?.text || 'Shippo purchase failed.');
+    }
+
+    // Update Order in DB
+    await db.update(orders)
+      .set({
+        trackingNumber: transaction.tracking_number,
+        labelUrl: transaction.label_url,
+        status: 'SHIPPED',
+        shippedAt: new Date(),
+      })
+      .where(eq(orders.id, orderId));
+
+    // Send Shipping Confirmation Email
+    try {
+      const mailOptions = {
+        from: `"White Rabbit" <${process.env.GMAIL_USER}>`,
+        to: order.email,
+        subject: `Your White Rabbit has Shipped! 📦`,
+        html: `
+          <div style="font-family: serif; max-width: 600px; margin: 0 auto; padding: 40px; background: #000; color: #fff; border: 1px solid #333; border-radius: 30px;">
+            <h1 style="text-align: center; letter-spacing: 5px; color: #fff; margin-bottom: 40px;">WHITE RABBIT</h1>
+            <p style="text-align: center; font-size: 18px; color: #00ffff; margin-bottom: 30px;">Your shipment is in transit.</p>
+            <div style="border-top: 1px solid #222; padding-top: 30px; line-height: 1.6;">
+              <p>Tracking Number: <span style="font-family: monospace; color: #00ffff; font-weight: bold;">${transaction.tracking_number}</span></p>
+              <p>Carrier: <strong>Canada Post</strong></p>
+              <p>Service: <strong>${rate.servicelevel.name}</strong></p>
+            </div>
+            <div style="margin-top: 40px; text-align: center;">
+              <a href="https://www.canadapost-postescanada.ca/track-reperage/en#/resultList?searchFor=${transaction.tracking_number}" 
+                 style="display: inline-block; padding: 15px 30px; background: #fff; color: #000; text-decoration: none; border-radius: 50px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">
+                 Track My Package
+              </a>
+            </div>
+            <p style="margin-top: 60px; text-align: center; font-size: 10px; color: #444; letter-spacing: 2px;">THE SEQUENCE COMPLETES SOON</p>
+          </div>
+        `,
+      };
+      await transporter.sendMail(mailOptions);
+    } catch (mailError) {
+      console.error('Shipping email failed:', mailError);
+    }
+
+    return { 
+      success: true, 
+      labelUrl: transaction.label_url, 
+      trackingNumber: transaction.tracking_number 
+    };
+  } catch (error: any) {
+    console.error('Label generation error:', error);
+    return { success: false, error: `Shippo error: ${error.message || 'Transmission interrupted.'}` };
+  }
+}
+

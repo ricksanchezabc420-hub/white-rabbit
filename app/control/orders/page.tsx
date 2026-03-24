@@ -3,14 +3,15 @@
 // Diagnostic: Trigger version 2.1 deployment for fulfillment hub
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getOrders, updateOrderTracking } from '@/app/actions/orderActions';
+import { getOrders, updateOrderTracking, generateShippingLabel } from '@/app/actions/orderActions';
 import { isAdmin, logout } from '@/app/actions/authActions';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Box, Package, Truck, CheckCircle2, LogOut, RefreshCw, Mail, MapPin } from 'lucide-react';
+import { Box, Package, Truck, CheckCircle2, LogOut, RefreshCw, Mail, MapPin, FileText, ExternalLink } from 'lucide-react';
 
 export default function FulfillmentPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isProcessingLabel, setIsProcessingLabel] = useState<string | null>(null);
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [trackingInput, setTrackingInput] = useState<{ [key: string]: string }>({});
   const router = useRouter();
@@ -45,6 +46,23 @@ export default function FulfillmentPage() {
       loadOrders();
     } else {
       alert('Failed to update tracking.');
+    }
+  }
+
+  async function handleGenerateLabel(orderId: string) {
+    setIsProcessingLabel(orderId);
+    try {
+      const result = await generateShippingLabel(orderId);
+      if (result.success && result.labelUrl) {
+        window.open(result.labelUrl, '_blank');
+        await loadOrders();
+      } else {
+        alert(result.error || 'Failed to generate label.');
+      }
+    } catch (err) {
+      alert('Transmission error during label generation.');
+    } finally {
+      setIsProcessingLabel(null);
     }
   }
 
@@ -162,24 +180,51 @@ export default function FulfillmentPage() {
                   <div className="lg:w-1/4 flex flex-col justify-center">
                     {order.status === 'PENDING' ? (
                       <div className="space-y-3">
+                        <button 
+                          onClick={() => handleGenerateLabel(order.id)}
+                          disabled={isProcessingLabel === order.id}
+                          className="w-full bg-electric-blue text-black py-3 rounded-xl font-bold text-sm tracking-widest hover:shadow-[0_0_15px_rgba(0,255,255,0.3)] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                          <FileText className="w-4 h-4" />
+                          {isProcessingLabel === order.id ? 'PRINTING...' : 'BUY & PRINT LABEL'}
+                        </button>
+                        
+                        <div className="relative flex items-center py-2">
+                          <div className="flex-grow border-t border-white/5"></div>
+                          <span className="flex-shrink mx-4 text-[8px] text-white/20 uppercase tracking-widest">or manual</span>
+                          <div className="flex-grow border-t border-white/5"></div>
+                        </div>
+
                         <input 
-                          placeholder="Fulfillment Tracking Code"
-                          className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm outline-none focus:border-neon-pink transition-all font-light"
+                          placeholder="Manual Tracking Code"
+                          className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-[10px] outline-none focus:border-neon-pink transition-all font-light"
                           value={trackingInput[order.id] || ''}
                           onChange={(e) => setTrackingInput({ ...trackingInput, [order.id]: e.target.value })}
                         />
                         <button 
                           onClick={() => handleUpdateTracking(order.id)}
-                          className="w-full bg-white text-black py-3 rounded-xl font-bold text-sm tracking-widest hover:shadow-[0_0_15px_rgba(255,255,255,0.3)] transition-all"
+                          className="w-full bg-white/5 border border-white/10 text-white/40 py-2 rounded-xl font-bold text-[10px] tracking-widest hover:text-white transition-all uppercase"
                         >
-                          DISPATCH
+                          Manual Ship
                         </button>
                       </div>
                     ) : (
                       <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
                         <div className="text-[9px] font-mono text-white/30 uppercase mb-1">Tracking Out</div>
                         <div className="text-white font-mono text-xs truncate mb-2">{order.trackingNumber}</div>
-                        <div className="text-[9px] font-mono text-acid-green/60 uppercase">
+                        
+                        {order.labelUrl && (
+                          <a 
+                            href={order.labelUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-acid-green text-[10px] font-bold uppercase tracking-wider hover:underline mb-3"
+                          >
+                            <ExternalLink className="w-3 h-3" /> Re-print Label
+                          </a>
+                        )}
+
+                        <div className="text-[9px] font-mono text-white/20 uppercase">
                           Shipped: {order.shippedAt ? new Date(order.shippedAt).toLocaleDateString() : 'N/A'}
                         </div>
                       </div>
