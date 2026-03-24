@@ -4,31 +4,14 @@ import { db } from '@/db';
 import { orders } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import nodemailer from 'nodemailer';
-import Shippo from 'shippo';
 
-// Shippo API Client Initialization - ensure SHIPPO_API_KEY is in Vercel env vars.
-const getShippoClient = () => {
+// Diagnostic: Version 4.0 - Direct REST API Integration (No SDK)
+const getShippoKey = () => {
   const p1 = 'shippo_test_71dfa4fd5';
   const p2 = '4751e0dd4cfd5f43beb5c5016b4a1b9';
   const hardcodedKey = p1 + p2;
-  
   const envKey = process.env.SHIPPO_API_KEY || process.env.NEXT_PUBLIC_SHIPPO_API_KEY;
-  const key = (envKey && envKey !== 'undefined' && envKey !== 'null') ? envKey : hardcodedKey;
-  
-  try {
-    // Standard library pattern for Node.js backends
-    const shippo = require('shippo')(key);
-    return shippo;
-  } catch (e) {
-    // If that fails, try the constructor pattern (shippo v2)
-    try {
-      const ShippoConstructor = require('shippo').default || require('shippo');
-      return new ShippoConstructor(key);
-    } catch (e2) {
-      console.error('All Shippo init methods failed:', e2);
-      return null;
-    }
-  }
+  return (envKey && envKey !== 'undefined' && envKey !== 'null') ? envKey : hardcodedKey;
 };
 
 const transporter = nodemailer.createTransport({
@@ -39,108 +22,112 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+export async function getOrders() {
+  return await db.query.orders.findMany({
+    orderBy: [desc(orders.createdAt)],
+  });
+}
+
 export async function getShippingRates(addressData: any, unitCount: number) {
   try {
-    const weight = (unitCount * 175) + (unitCount <= 3 ? 50 : 100); // g
+    const weight = (unitCount * 175) + (unitCount <= 3 ? 50 : 100); 
     const dimensions = unitCount <= 3 
       ? { length: 26, width: 19, height: 6 } 
       : unitCount <= 8 
         ? { length: 38, width: 26, height: 6 } 
         : { length: 40, width: 30, height: 15 };
 
-    const shippo = getShippoClient();
-    if (!shippo) {
-      throw new Error('Shippo API key missing (v3.1). Please configure SHIPPO_API_KEY in environment variables.');
-    }
-
-    const shipment = await shippo.shipment.create({
-      address_from: {
-        name: 'White Rabbit Warehouse',
-        street1: '190 Northfield Dr West',
-        city: 'Waterloo',
-        state: 'ON',
-        zip: 'N2L 0A6', // General Waterloo N2L area
-        country: 'CA',
+    const token = getShippoKey();
+    
+    const response = await fetch('https://api.goshippo.com/shipments/', {
+      method: 'POST',
+      headers: {
+        'Authorization': `ShippoToken ${token}`,
+        'Content-Type': 'application/json'
       },
-      address_to: {
-        name: addressData.shippingName || 'Customer',
-        street1: addressData.address,
-        city: addressData.city,
-        state: addressData.stateProvince,
-        zip: addressData.postalCode,
-        country: addressData.country || 'CA',
-      },
-      parcels: [{
-        length: dimensions.length,
-        width: dimensions.width,
-        height: dimensions.height,
-        distance_unit: 'cm',
-        weight: weight,
-        mass_unit: 'g',
-      }],
-      async: false,
+      body: JSON.stringify({
+        address_from: {
+          name: 'White Rabbit Warehouse',
+          street1: '190 Northfield Dr West',
+          city: 'Waterloo',
+          state: 'ON',
+          zip: 'N2L 0A6',
+          country: 'CA',
+        },
+        address_to: {
+          name: 'Customer',
+          street1: addressData.address,
+          city: addressData.city,
+          state: addressData.stateProvince,
+          zip: addressData.postalCode,
+          country: addressData.country || 'CA',
+        },
+        parcels: [{
+          length: dimensions.length,
+          width: dimensions.width,
+          height: dimensions.height,
+          distance_unit: 'cm',
+          weight: weight,
+          mass_unit: 'g',
+        }],
+        async: false,
+      }),
     });
 
-    // Filter for Canada Post Expedited Parcel
-    const rates = shipment.rates.filter((r: any) => 
-      r.servicelevel.token === 'canadapost_expedited_parcel'
-    );
-
-    if (rates.length === 0) {
-      // Fallback to the cheapest tracked option if expedited isn't available
-      return { success: true, rate: shipment.rates[0] };
+    if (!response.ok) {
+      const errData = await response.json();
+      throw new Error(errData.message || 'Shippo API Request Failed');
     }
 
-    return { success: true, rate: rates[0] };
-  } catch (error: any) {
-    console.error('Shippo error:', error);
-    return { success: false, error: `Shippo error: ${error.message || 'Transmission interrupted.'}` };
-  }
-}
+    const result = await response.json();
+    
+    const rates = result.rates.filter((r: any) => 
+      r.servicelevel.token === 'canadapost_expedited_parcel'
+    );
+    const rate = rates.length > 0 ? rates[0] : result.rates[0];
 
-export async function getOrders() {
-  try {
-    return await db.select().from(orders).orderBy(desc(orders.createdAt));
-  } catch (error) {
-    console.error('Failed to fetch orders:', error);
-    return [];
+    if (!rate) {
+      throw new Error('No shipping rates available for this location.');
+    }
+
+    return { 
+      success: true, 
+      rate: {
+        amount: rate.amount,
+        currency: rate.currency,
+        servicelevel: {
+          name: rate.servicelevel.name,
+          token: rate.servicelevel.token
+        },
+        object_id: rate.object_id
+      } 
+    };
+  } catch (error: any) {
+    console.error('REST Shipping error:', error);
+    return { success: false, error: `Logistics Error: ${error.message}` };
   }
 }
 
 export async function createOrder(orderData: any) {
   try {
-    console.log('Initiating order creation for:', orderData.email);
-    
-    let newOrder;
-    try {
-      const [insertedOrder] = await db.insert(orders).values({
-        ...orderData,
-        status: 'PENDING',
-        shippingCost: orderData.shippingCost || '0.00',
-        shippingService: orderData.shippingService || 'Canada Post Expedited Parcel',
-      }).returning();
-      newOrder = insertedOrder;
-      console.log('Order persisted to database:', newOrder.id);
-    } catch (dbError) {
-      console.error('Database insertion failed:', dbError);
-      return { success: false, error: 'Database persistence error.' };
-    }
+    const [newOrder] = await db.insert(orders).values({
+      ...orderData,
+      items: orderData.items, 
+    }).returning();
 
-    // Send Confirmation Emails via Gmail
+    // Send Confirmation via Gmail
     try {
       const mailOptions = {
         from: `"White Rabbit" <${process.env.GMAIL_USER}>`,
-        to: [newOrder.email, process.env.GMAIL_USER || ''], // Send to customer AND admin
-        subject: `Order Received #${newOrder.id.slice(0, 8)} - White Rabbit`,
+        to: newOrder.email,
+        subject: `The Hunt Begins: Order #${newOrder.id.slice(0, 8)}`,
         html: `
           <div style="font-family: serif; max-width: 600px; margin: 0 auto; padding: 40px; background: #000; color: #fff; border: 1px solid #333; border-radius: 30px;">
             <h1 style="text-align: center; letter-spacing: 5px; color: #fff; margin-bottom: 40px;">WHITE RABBIT</h1>
-            <p style="font-style: italic; color: #888; text-align: center; margin-bottom: 40px;">A new sequence has been initiated.</p>
+            <p style="font-style: italic; color: #00ffff; text-align: center; margin-bottom: 40px;">Order confirmed. The sequence is being prepared.</p>
             <div style="border-top: 1px solid #222; padding-top: 30px; line-height: 1.6;">
-              <p>Order ID: <span style="font-family: monospace; color: #00ffff;">#${newOrder.id.slice(0, 8)}</span></p>
-              <p>Name: <strong>${newOrder.shippingName}</strong></p>
+              <p>Order ID: <span style="font-family: monospace; color: #bfff00;">${newOrder.id}</span></p>
               <p>Total: <strong>$${newOrder.totalUsd} USDC</strong></p>
-              <p>Status: <span style="color: #bfff00;">Awaiting Fulfillment</span></p>
               ${newOrder.paymentMethod === 'E-TRANSFER' ? '<p style="color: #ff3e3e; font-weight: bold; border: 1px solid #ff3e3e; padding: 10px; border-radius: 10px; margin-top: 20px;">* ACTION REQUIRED: Please complete your E-transfer to pay@whiterabbit.com to begin production.</p>' : ''}
             </div>
             <div style="margin-top: 40px; padding: 20px; background: #111; border-radius: 15px;">
@@ -152,12 +139,8 @@ export async function createOrder(orderData: any) {
       };
 
       await transporter.sendMail(mailOptions);
-      console.log('Confirmation emails sent via Gmail');
     } catch (mailError) {
       console.error('Nodemailer failed:', mailError);
-      // We don't fail the whole order if just the email fails, 
-      // but we log it. However, if the user sees 'Order failed', 
-      // it might be because the catch block returned it.
     }
 
     return { success: true, orderId: newOrder.id };
@@ -215,64 +198,62 @@ export async function generateShippingLabel(orderId: string) {
     });
     if (!order) throw new Error('Order not found.');
 
-    const shippo = getShippoClient();
-    if (!shippo) throw new Error('Shippo API key missing.');
+    const token = getShippoKey();
 
-    // Calculate packaging logic based on the order's unit count
     const itemsList = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
     const unitCount = itemsList.reduce((acc: number, i: any) => acc + i.quantity, 0);
-    const weight = (unitCount * 175) + (unitCount <= 3 ? 50 : 100); // g
+    const weight = (unitCount * 175) + (unitCount <= 3 ? 50 : 100); 
     const dimensions = unitCount <= 3 
       ? { length: 26, width: 19, height: 6 } 
       : unitCount <= 8 
         ? { length: 38, width: 26, height: 6 } 
         : { length: 40, width: 30, height: 15 };
 
-    const shipment = await shippo.shipment.create({
-      address_from: {
-        name: 'White Rabbit Warehouse',
-        street1: '190 Northfield Dr West',
-        city: 'Waterloo',
-        state: 'ON',
-        zip: 'N2L 0A6',
-        country: 'CA',
+    const shpResponse = await fetch('https://api.goshippo.com/shipments/', {
+      method: 'POST',
+      headers: {
+        'Authorization': `ShippoToken ${token}`,
+        'Content-Type': 'application/json'
       },
-      address_to: {
-        name: order.shippingName,
-        street1: order.address,
-        city: order.city,
-        state: order.stateProvince,
-        zip: order.postalCode,
-        country: order.country,
-      },
-      parcels: [{
-        length: dimensions.length,
-        width: dimensions.width,
-        height: dimensions.height,
-        distance_unit: 'cm',
-        weight: weight,
-        mass_unit: 'g',
-      }],
-      async: false,
+      body: JSON.stringify({
+        address_from: {
+          name: 'White Rabbit Warehouse', street1: '190 Northfield Dr West', city: 'Waterloo', state: 'ON', zip: 'N2L 0A6', country: 'CA',
+        },
+        address_to: {
+          name: order.shippingName, street1: order.address, city: order.city, state: order.stateProvince, zip: order.postalCode, country: order.country,
+        },
+        parcels: [{
+          length: dimensions.length, width: dimensions.width, height: dimensions.height, distance_unit: 'cm', weight: weight, mass_unit: 'g',
+        }],
+        async: false,
+      }),
     });
 
-    const rates = shipment.rates.filter((r: any) => 
-      r.servicelevel.token === 'canadapost_expedited_parcel'
-    );
+    const shipment = await shpResponse.json();
+    const rates = shipment.rates.filter((r: any) => r.servicelevel.token === 'canadapost_expedited_parcel');
     const rate = rates.length > 0 ? rates[0] : shipment.rates[0];
 
-    // Purchase Transaction
-    const transaction = await shippo.transaction.create({
-      rate: rate.object_id,
-      label_file_type: 'PDF',
-      async: false,
+    if (!rate) throw new Error('No rate found for label generation.');
+
+    const txResponse = await fetch('https://api.goshippo.com/transactions/', {
+      method: 'POST',
+      headers: {
+        'Authorization': `ShippoToken ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        rate: rate.object_id,
+        label_file_type: 'PDF',
+        async: false,
+      }),
     });
+
+    const transaction = await txResponse.json();
 
     if (transaction.status === 'ERROR') {
       throw new Error(transaction.messages[0]?.text || 'Shippo purchase failed.');
     }
 
-    // Update Order in DB
     await db.update(orders)
       .set({
         trackingNumber: transaction.tracking_number,
@@ -282,7 +263,6 @@ export async function generateShippingLabel(orderId: string) {
       })
       .where(eq(orders.id, orderId));
 
-    // Send Shipping Confirmation Email
     try {
       const mailOptions = {
         from: `"White Rabbit" <${process.env.GMAIL_USER}>`,
@@ -322,4 +302,3 @@ export async function generateShippingLabel(orderId: string) {
     return { success: false, error: `Shippo error: ${error.message || 'Transmission interrupted.'}` };
   }
 }
-
