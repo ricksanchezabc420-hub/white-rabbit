@@ -52,7 +52,7 @@ export async function getShippingRates(addressData: any, unitCount: number) {
 
     const shippo = getShippoClient();
     if (!shippo) {
-      throw new Error('Shippo API key missing. Please configure SHIPPO_API_KEY in environment variables.');
+      throw new Error('Shippo API key missing (v3.1). Please configure SHIPPO_API_KEY in environment variables.');
     }
 
     const shipment = await shippo.shipment.create({
