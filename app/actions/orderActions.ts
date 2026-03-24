@@ -4,6 +4,7 @@ import { db } from '@/db';
 import { orders } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import nodemailer from 'nodemailer';
+// Shippo API Client Initialization - ensure SHIPPO_API_KEY is in Vercel env vars.
 const getShippoClient = () => {
   const key = process.env.SHIPPO_API_KEY;
   if (!key) return null;
