@@ -142,41 +142,43 @@ export async function getShippingRates(addressData: any, unitCount: number) {
   }
 }
 
+import crypto from 'crypto';
+
 export async function createOrder(orderData: any) {
   try {
-    console.log('--- Incoming Order (v4.7) ---');
-    console.log('Address:', orderData.address);
-
-    // v4.7 Strict Validation
-    if (!orderData.address || String(orderData.address).trim() === '') {
+    console.log('--- Incoming Order (v4.8) ---');
+    
+    // v4.8 Data Cleaning
+    const addressStr = String(orderData.address || '').trim();
+    if (!addressStr) {
       throw new Error("Address is required. Please re-select it in the autocomplete field.");
     }
 
-    // Explicitly generate ID to avoid pgcrypto dependency issues
+    // Explicitly generate ID (v4.8 uses Node crypto)
     const orderId = crypto.randomUUID();
 
     let newOrder;
     try {
       const results = await db.insert(orders).values({
-        id: orderId, // EXPLICIT ID
-        paymentMethod: orderData.paymentMethod,
-        walletAddress: orderData.walletAddress,
-        totalUsd: orderData.totalUsd,
-        shippingName: orderData.shippingName,
-        email: orderData.email,
-        address: orderData.address,
-        city: orderData.city,
-        stateProvince: orderData.stateProvince,
-        postalCode: orderData.postalCode,
-        country: orderData.country,
-        items: orderData.items,
-        shippingCost: orderData.shippingCost,
-        shippingService: orderData.shippingService,
+        id: orderId,
+        paymentMethod: String(orderData.paymentMethod || 'E-TRANSFER').substring(0, 20),
+        walletAddress: orderData.walletAddress ? String(orderData.walletAddress).substring(0, 42) : null,
+        totalUsd: orderData.totalUsd, // Drizzle decimal handles string-number
+        shippingName: String(orderData.shippingName || 'No Name').substring(0, 255),
+        email: String(orderData.email || '').substring(0, 255),
+        address: addressStr.substring(0, 255),
+        city: String(orderData.city || '').substring(0, 255),
+        stateProvince: String(orderData.stateProvince || '').substring(0, 255),
+        postalCode: String(orderData.postalCode || '').substring(0, 50),
+        country: String(orderData.country || 'CA').substring(0, 100),
+        items: orderData.items, 
+        shippingCost: orderData.shippingCost || "0.00",
+        shippingService: String(orderData.shippingService || 'Standard').substring(0, 100),
       }).returning();
       newOrder = results[0];
     } catch (dbError: any) {
-      console.error('DB Insert Error Detail:', dbError);
-      throw new Error(`Database Error: ${dbError.message || 'Check database constraints or pgcrypto extension.'}`);
+      console.error('DB Insert Error (v4.8):', dbError);
+      throw new Error(`Database Error: ${dbError.message || 'Constraint violation or connection timeout.'}`);
     }
 
     if (!newOrder) {
