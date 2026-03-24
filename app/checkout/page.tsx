@@ -44,7 +44,7 @@ export default function CheckoutPage() {
         setShippingRate(result.rate);
         setStep(2);
       } else {
-        alert('Could not calculate shipping. Please check your address.');
+        alert(result.error || 'Could not calculate shipping. Please check your address.');
       }
     } catch (error) {
       console.error(error);
