@@ -10,7 +10,7 @@ export const products = pgTable('products', {
 });
 
 export const orders = pgTable('orders', {
-  id: uuid('id').defaultRandom().primaryKey(),
+  id: serial('id').primaryKey(),
   paymentMethod: varchar('payment_method', { length: 20 }).notNull().default('CRYPTO'),
   walletAddress: varchar('wallet_address', { length: 42 }), 
   transactionHash: varchar('transaction_hash', { length: 66 }).unique(), 

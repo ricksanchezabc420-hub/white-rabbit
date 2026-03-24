@@ -146,45 +146,10 @@ import { sql } from 'drizzle-orm';
 
 export async function createOrder(orderData: any) {
   try {
-    console.log('--- Incoming Order (v4.15 V2 MIGRATION) ---');
+    console.log('--- Incoming Order (v4.16 CONSOLIDATED) ---');
     
-    // v4.15: Autonomous creation of the new orders_v2 table
-    try {
-      await db.execute(sql`
-        CREATE TABLE IF NOT EXISTS orders_v2 (
-          id SERIAL PRIMARY KEY,
-          payment_method VARCHAR(20) NOT NULL DEFAULT 'CRYPTO',
-          wallet_address VARCHAR(42),
-          transaction_hash VARCHAR(66) UNIQUE,
-          status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
-          total_usd DECIMAL(10, 2) NOT NULL,
-          shipping_name VARCHAR(255) NOT NULL,
-          email VARCHAR(255) NOT NULL,
-          address VARCHAR(255) NOT NULL,
-          city VARCHAR(255) NOT NULL,
-          state_province VARCHAR(255) NOT NULL,
-          postal_code VARCHAR(50) NOT NULL,
-          country VARCHAR(100) NOT NULL,
-          items JSONB NOT NULL,
-          shipping_cost DECIMAL(10, 2),
-          shipping_service VARCHAR(100),
-          tracking_number VARCHAR(255),
-          shipped_at TIMESTAMP,
-          label_url VARCHAR(500),
-          created_at TIMESTAMP NOT NULL DEFAULT NOW()
-        );
-        -- Ensure sequence starts at 1000 for the new table
-        DO $$ 
-        BEGIN 
-          IF (SELECT last_value FROM orders_v2_id_seq) < 1000 THEN
-            ALTER SEQUENCE orders_v2_id_seq RESTART WITH 1000;
-          END IF;
-        END $$;
-      `);
-      console.log('Orders v2 initialization handled.');
-    } catch (e) {
-      console.log('Skipping v2 table creation check.');
-    }
+    // v4.16: Migration to consolidated 'orders' table (SERIAL ID) complete.
+    // Legacy orders_v2 creation logic removed.
 
     // v4.15 Strict Data Cleaning
     const addressStr = String(orderData.address || '').trim();
@@ -257,7 +222,7 @@ export async function createOrder(orderData: any) {
   }
 }
 
-export async function updateOrderTracking(orderId: string, trackingNumber: string) {
+export async function updateOrderTracking(orderId: number, trackingNumber: string) {
   try {
     const [updatedOrder] = await db.update(orders)
       .set({ 
@@ -272,7 +237,7 @@ export async function updateOrderTracking(orderId: string, trackingNumber: strin
     const mailOptions = {
       from: `"White Rabbit" <${process.env.GMAIL_USER}>`,
       to: updatedOrder.email,
-      subject: `Order Shipped #${updatedOrder.id.slice(0, 8)} - White Rabbit`,
+      subject: `Order Shipped #WR${updatedOrder.id} - White Rabbit`,
       html: `
         <div style="font-family: serif; max-width: 600px; margin: 0 auto; padding: 40px; background: #000; color: #fff; border: 1px solid #333; border-radius: 30px;">
           <h1 style="text-align: center; letter-spacing: 5px; color: #fff; margin-bottom: 40px;">WHITE RABBIT</h1>
@@ -298,7 +263,7 @@ export async function updateOrderTracking(orderId: string, trackingNumber: strin
   }
 }
 
-export async function generateShippingLabel(orderId: string) {
+export async function generateShippingLabel(orderId: number) {
   try {
     const order = await db.query.orders.findFirst({
       where: eq(orders.id, orderId)

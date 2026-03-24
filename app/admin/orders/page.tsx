@@ -13,7 +13,7 @@ export default function AdminOrdersPage() {
   const { address, isConnected } = useAccount();
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [trackingInput, setTrackingInput] = useState<{ [key: string]: string }>({});
+  const [trackingInput, setTrackingInput] = useState<{ [key: number]: string }>({});
 
   const isAdmin = isConnected && address?.toLowerCase() === ADMIN_WALLET.toLowerCase();
 
@@ -30,7 +30,7 @@ export default function AdminOrdersPage() {
     setIsLoading(false);
   }
 
-  async function handleUpdateTracking(orderId: string) {
+  async function handleUpdateTracking(orderId: number) {
     const tracking = trackingInput[orderId];
     if (!tracking) return;
 
@@ -100,7 +100,7 @@ export default function AdminOrdersPage() {
                   {/* Order Meta */}
                   <div className="lg:w-1/4">
                     <div className="text-xs font-mono text-white/30 mb-1">ORDER ID</div>
-                    <div className="text-lg font-mono text-white mb-4">#{order.id.slice(0, 8)}</div>
+                    <div className="text-lg font-mono text-white">#WR{order.id}</div>
                     <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] uppercase font-bold tracking-widest ${
                       order.status === 'PENDING' ? 'bg-acid-green/10 text-acid-green' : 'bg-electric-blue/10 text-electric-blue'
                     }`}>

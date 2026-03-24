@@ -11,9 +11,9 @@ import { Box, Package, Truck, CheckCircle2, LogOut, RefreshCw, Mail, MapPin, Fil
 export default function FulfillmentPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isProcessingLabel, setIsProcessingLabel] = useState<string | null>(null);
+  const [isProcessingLabel, setIsProcessingLabel] = useState<number | null>(null);
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
-  const [trackingInput, setTrackingInput] = useState<{ [key: string]: string }>({});
+  const [trackingInput, setTrackingInput] = useState<{ [key: number]: string }>({});
   const router = useRouter();
 
   useEffect(() => {
@@ -37,7 +37,7 @@ export default function FulfillmentPage() {
     setIsLoading(false);
   }
 
-  async function handleUpdateTracking(orderId: string) {
+  async function handleUpdateTracking(orderId: number) {
     const tracking = trackingInput[orderId];
     if (!tracking) return;
 
@@ -49,7 +49,7 @@ export default function FulfillmentPage() {
     }
   }
 
-  async function handleGenerateLabel(orderId: string) {
+  async function handleGenerateLabel(orderId: number) {
     setIsProcessingLabel(orderId);
     try {
       const result = await generateShippingLabel(orderId);
