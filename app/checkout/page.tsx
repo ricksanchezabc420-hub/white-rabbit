@@ -106,7 +106,7 @@ export default function CheckoutPage() {
       setStep(3);
     } catch (error: any) {
       console.error('Checkout error:', error);
-      alert(`Order failed (v4.13): ${error.message || 'Transmission interrupted.'}`);
+      alert(`Order failed (v4.14): ${error.message || 'Transmission interrupted.'}`);
     } finally {
       setIsProcessing(false);
     }
