@@ -4,6 +4,7 @@ import { db } from '@/db';
 import { orders } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import nodemailer from 'nodemailer';
+const shippo = require('shippo')(process.env.SHIPPO_API_KEY);
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -12,6 +13,60 @@ const transporter = nodemailer.createTransport({
     pass: process.env.GMAIL_APP_PASSWORD,
   },
 });
+
+export async function getShippingRates(addressData: any, unitCount: number) {
+  try {
+    const weight = (unitCount * 175) + (unitCount <= 3 ? 50 : 100); // g
+    const dimensions = unitCount <= 3 
+      ? { length: 26, width: 19, height: 6 } 
+      : unitCount <= 8 
+        ? { length: 38, width: 26, height: 6 } 
+        : { length: 40, width: 30, height: 15 };
+
+    const shipment = await shippo.shipment.create({
+      address_from: {
+        name: 'White Rabbit Warehouse',
+        street1: '190 Northfield Dr West',
+        city: 'Waterloo',
+        state: 'ON',
+        zip: 'N2L 0A6', // General Waterloo N2L area
+        country: 'CA',
+      },
+      address_to: {
+        name: addressData.shippingName || 'Customer',
+        street1: addressData.address,
+        city: addressData.city,
+        state: addressData.stateProvince,
+        zip: addressData.postalCode,
+        country: addressData.country || 'CA',
+      },
+      parcels: [{
+        length: dimensions.length,
+        width: dimensions.width,
+        height: dimensions.height,
+        distance_unit: 'cm',
+        weight: weight,
+        mass_unit: 'g',
+      }],
+      async: false,
+    });
+
+    // Filter for Canada Post Expedited Parcel
+    const rates = shipment.rates.filter((r: any) => 
+      r.servicelevel.token === 'canadapost_expedited_parcel'
+    );
+
+    if (rates.length === 0) {
+      // Fallback to the cheapest tracked option if expedited isn't available
+      return { success: true, rate: shipment.rates[0] };
+    }
+
+    return { success: true, rate: rates[0] };
+  } catch (error) {
+    console.error('Shippo error:', error);
+    return { success: false, error: 'Failed to calculate shipping.' };
+  }
+}
 
 export async function getOrders() {
   try {
@@ -31,6 +86,8 @@ export async function createOrder(orderData: any) {
       const [insertedOrder] = await db.insert(orders).values({
         ...orderData,
         status: 'PENDING',
+        shippingCost: orderData.shippingCost || '0.00',
+        shippingService: orderData.shippingService || 'Canada Post Expedited Parcel',
       }).returning();
       newOrder = insertedOrder;
       console.log('Order persisted to database:', newOrder.id);

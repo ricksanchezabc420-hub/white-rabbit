@@ -24,6 +24,8 @@ export const orders = pgTable('orders', {
   postalCode: varchar('postal_code', { length: 50 }).notNull(),
   country: varchar('country', { length: 100 }).notNull(),
   items: json('items').notNull(),
+  shippingCost: decimal('shipping_cost', { precision: 10, scale: 2 }),
+  shippingService: varchar('shipping_service', { length: 100 }),
   trackingNumber: varchar('tracking_number', { length: 255 }),
   shippedAt: timestamp('shipped_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),

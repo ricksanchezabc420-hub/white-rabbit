@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAccount, useSendTransaction } from 'wagmi';
 import { parseEther } from 'viem';
-import { createOrder } from '@/app/actions/orderActions';
+import { createOrder, getShippingRates } from '@/app/actions/orderActions';
 
 export default function CheckoutPage() {
   const { items, getCartTotal, getCartTotalCAD, clearCart } = useCartStore();
@@ -19,22 +19,40 @@ export default function CheckoutPage() {
   const [step, setStep] = useState<1 | 2 | 3>(1); // 1: Shipping, 2: Payment, 3: Success
   const [paymentMethod, setPaymentMethod] = useState<'CRYPTO' | 'E-TRANSFER'>('CRYPTO');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isCalculatingShipping, setIsCalculatingShipping] = useState(false);
+  const [shippingRate, setShippingRate] = useState<any>(null);
 
   // Form State
   const [formData, setFormData] = useState({
-    shippingName: '', email: '', address: '', city: '', stateProvince: '', postalCode: '', country: ''
+    shippingName: '', email: '', address: '', city: '', stateProvince: '', postalCode: '', country: 'CA'
   });
 
-  const total = getCartTotal();
+  const subtotal = getCartTotal();
+  const isFreeShipping = subtotal >= 150;
+  const shippingCharge = isFreeShipping ? 0 : (shippingRate ? parseFloat(shippingRate.amount) : 0);
+  const totalWithShipping = subtotal + shippingCharge;
 
-  if (items.length === 0 && step !== 3) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
-        <h1 className="text-3xl font-serif mb-4">Your Cart is Empty</h1>
-        <Link href="/"><button className="bg-white text-black px-8 py-3 rounded-full font-bold">Return Home</button></Link>
-      </div>
-    );
-  }
+  const handleContinueToPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsCalculatingShipping(true);
+    
+    try {
+      const unitCount = items.reduce((acc, item) => acc + item.quantity, 0);
+      const result = await getShippingRates(formData, unitCount);
+      
+      if (result.success && result.rate) {
+        setShippingRate(result.rate);
+        setStep(2);
+      } else {
+        alert('Could not calculate shipping. Please check your address.');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Error calculating shipping.');
+    } finally {
+      setIsCalculatingShipping(false);
+    }
+  };
 
   const handleProcessOrder = async () => {
     setIsProcessing(true);
@@ -57,7 +75,9 @@ export default function CheckoutPage() {
       const result = await createOrder({
         ...formData,
         paymentMethod,
-        totalUsd: total.toString(),
+        totalUsd: totalWithShipping.toString(),
+        shippingCost: shippingCharge.toFixed(2),
+        shippingService: shippingRate ? shippingRate.servicelevel.name : 'Canada Post Expedited Parcel',
         items: items, // Pass as object for the JSON column
         walletAddress: isConnected ? 'CONNECTED' : null, // Simplified for now
       });
@@ -91,7 +111,7 @@ export default function CheckoutPage() {
           {step === 1 && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass p-8 rounded-3xl">
               <h2 className="text-xl font-medium mb-6 flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-neon-pink" /> 1. Shipping Details</h2>
-              <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); setStep(2); }}>
+              <form className="space-y-4" onSubmit={handleContinueToPayment}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <input required placeholder="Full Name" className="w-full bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-neon-pink transition-colors" onChange={e => setFormData({...formData, shippingName: e.target.value})} />
                   <input required type="email" placeholder="Email Address" className="w-full bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-neon-pink transition-colors" onChange={e => setFormData({...formData, email: e.target.value})} />
@@ -128,17 +148,17 @@ export default function CheckoutPage() {
               {paymentMethod === 'E-TRANSFER' && (
                 <div className="bg-acid-green/10 border border-acid-green/20 p-6 rounded-xl mb-8">
                   <h3 className="text-acid-green font-bold mb-2">E-Transfer Instructions</h3>
-                  <p className="text-sm text-white/70">Please send exactly <strong>${total.toFixed(2)} USD</strong> (~${getCartTotalCAD().toFixed(2)} CAD) to <strong>pay@whiterabbit.com</strong>. Include your email address in the transfer notes. Your order will ship once the deposit is manually verified.</p>
+                  <p className="text-sm text-white/70">Please send exactly <strong>${totalWithShipping.toFixed(2)} USD</strong> (~${(totalWithShipping * 1.4).toFixed(2)} CAD) to <strong>pay@whiterabbit.com</strong>. Include your email address in the transfer notes. Your order will ship once the deposit is manually verified.</p>
                 </div>
               )}
 
-              <button 
-                onClick={handleProcessOrder}
-                disabled={isProcessing}
-                className="w-full bg-neon-pink text-black py-4 rounded-xl font-bold hover:shadow-[0_0_20px_rgba(255,0,255,0.5)] transition-all disabled:opacity-50"
-              >
-                {isProcessing ? 'Processing...' : `Place Order • $${total.toFixed(2)} USDC`}
-              </button>
+                <button 
+                  onClick={handleProcessOrder}
+                  disabled={isProcessing}
+                  className="w-full bg-neon-pink text-black py-4 rounded-xl font-bold hover:shadow-[0_0_20px_rgba(255,0,255,0.5)] transition-all disabled:opacity-50"
+                >
+                  {isProcessing ? 'Processing...' : `Place Order • $${totalWithShipping.toFixed(2)} USDC`}
+                </button>
             </motion.div>
           )}
 
@@ -175,11 +195,20 @@ export default function CheckoutPage() {
             <div className="border-t border-white/10 pt-4 space-y-2 mb-6 text-sm">
               <div className="flex justify-between text-white/50">
                 <span>Subtotal</span>
-                <span className="font-mono">${total.toFixed(2)}</span>
+                <span className="font-mono">${subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-white/50">
                 <span>Shipping</span>
-                <span className="font-mono">Calculated at dispatch</span>
+                <span className="font-mono">
+                  {isFreeShipping && shippingRate ? (
+                    <>
+                      <span className="text-red-500 line-through mr-2">${shippingRate.amount}</span>
+                      <span className="text-acid-green">$0.00</span>
+                    </>
+                  ) : (
+                    shippingRate ? `$${shippingRate.amount}` : 'Calculated next step'
+                  )}
+                </span>
               </div>
               <div className="flex justify-between text-white/50">
                 <span>Taxes</span>
@@ -190,8 +219,8 @@ export default function CheckoutPage() {
             <div className="border-t border-white/10 pt-4 flex justify-between items-end">
               <span className="font-bold pb-1">Total</span>
               <div className="text-right">
-                <div className="text-2xl font-mono leading-none mb-1">${total.toFixed(2)} <span className="text-xs text-white/30 font-sans">USDC</span></div>
-                <div className="text-sm font-mono text-white/40 italic">~${getCartTotalCAD().toFixed(2)} CAD</div>
+                <div className="text-2xl font-mono leading-none mb-1">${totalWithShipping.toFixed(2)} <span className="text-xs text-white/30 font-sans">USDC</span></div>
+                <div className="text-sm font-mono text-white/40 italic">~${(totalWithShipping * 1.4).toFixed(2)} CAD</div>
               </div>
             </div>
           </div>
