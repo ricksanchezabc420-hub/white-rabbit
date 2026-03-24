@@ -7,7 +7,7 @@ import { X, Minus, Plus, ShoppingBag } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function CartDrawer() {
-  const { items, updateQuantity, getCartTotal, getCartTotalCAD } = useCartStore();
+  const { items, updateQuantity, getCartTotal, getCartTotalUSDC } = useCartStore();
   const { isCartOpen: isOpen, toggleCart } = useUIStore();
   const router = useRouter();
 
@@ -50,7 +50,7 @@ export default function CartDrawer() {
                     </div>
                     <div className="flex-1">
                       <h3 className={`font-medium ${item.theme}`}>{item.name}</h3>
-                      <p className="text-sm font-mono text-white/50">${item.price}</p>
+                      <p className="text-sm font-mono text-white/50">${item.price} CAD</p>
                     </div>
                     <div className="flex items-center gap-3 bg-black/50 rounded-full border border-white/10 px-2 py-1">
                       <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="p-1 hover:text-neon-pink transition-colors"><Minus className="w-3 h-3" /></button>
@@ -67,8 +67,8 @@ export default function CartDrawer() {
                 <div className="flex justify-between items-end mb-6">
                   <span className="text-white/50 font-light translate-y-[-4px]">Subtotal</span>
                   <div className="text-right">
-                    <div className="text-2xl font-mono leading-none mb-1 text-white">${getCartTotal().toFixed(2)} <span className="text-xs text-white/30 font-sans">USDC</span></div>
-                    <div className="text-sm font-mono text-white/40 italic">~${getCartTotalCAD().toFixed(2)} CAD</div>
+                    <div className="text-2xl font-mono leading-none mb-1 text-white">${getCartTotal().toFixed(2)} <span className="text-xs text-white/30 font-sans">CAD</span></div>
+                    <div className="text-sm font-mono text-white/40 italic">~${getCartTotalUSDC().toFixed(2)} USDC</div>
                   </div>
                 </div>
                 <button 

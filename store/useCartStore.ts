@@ -15,11 +15,11 @@ interface CartStore {
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
-  getCartTotal: () => number;
-  getCartTotalCAD: () => number;
+  getCartTotal: () => number; // Now Returns CAD
+  getCartTotalUSDC: () => number; // Conversion for payment
 }
 
-const USDC_TO_CAD = 1.35; // Semi-regularly updated relative cost rate
+const CAD_TO_USDC = 0.75; // Semi-regularly updated relative cost rate
 
 export const useCartStore = create<CartStore>()(
   persist(
@@ -46,7 +46,7 @@ export const useCartStore = create<CartStore>()(
       },
       clearCart: () => set({ items: [] }),
       getCartTotal: () => get().items.reduce((total, item) => total + (item.price * item.quantity), 0),
-      getCartTotalCAD: () => get().getCartTotal() * USDC_TO_CAD,
+      getCartTotalUSDC: () => get().getCartTotal() * CAD_TO_USDC,
     }),
     {
       name: 'white-rabbit-cart',

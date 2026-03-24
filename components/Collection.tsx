@@ -88,13 +88,13 @@ export default function Collection() {
                 <h4 className={`text-lg sm:text-2xl font-serif mb-1 sm:mb-2 ${product.theme} tracking-wide text-center`}>{product.name}</h4>
                 {/* Description removed for cleaner UI */}
                 <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-2 sm:gap-0">
-                  <span className="font-mono text-base sm:text-lg group-hover:text-white transition-colors text-white/80">$30 <span className="text-[10px] sm:text-xs text-white/40">USDC</span></span>
+                  <span className="font-mono text-base sm:text-lg group-hover:text-white transition-colors text-white/80">$35 <span className="text-[10px] sm:text-xs text-white/40">CAD</span></span>
                   
                   {/* Web3 CTA */}
                   <motion.button 
                     whileTap={{ scale: 0.95 }}
                     onClick={() => {
-                      addItem({ id: product.id, name: product.name, price: 30, theme: product.theme });
+                      addItem({ id: product.id, name: product.name, price: 35, theme: product.theme });
                       setCartOpen(true);
                     }}
                     className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider bg-white/10 hover:bg-white text-white hover:text-black transition-all ${product.glow}`}

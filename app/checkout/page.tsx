@@ -11,7 +11,7 @@ import { parseEther } from 'viem';
 import { createOrder, getShippingRates } from '@/app/actions/orderActions';
 
 export default function CheckoutPage() {
-  const { items, getCartTotal, getCartTotalCAD, clearCart } = useCartStore();
+  const { items, getCartTotal, getCartTotalUSDC, clearCart } = useCartStore();
   const router = useRouter();
   const { isConnected } = useAccount();
   const { sendTransactionAsync } = useSendTransaction();
@@ -30,7 +30,8 @@ export default function CheckoutPage() {
   const subtotal = getCartTotal();
   const isFreeShipping = subtotal >= 150;
   const shippingCharge = isFreeShipping ? 0 : (shippingRate ? parseFloat(shippingRate.amount) : 0);
-  const totalWithShipping = subtotal + shippingCharge;
+  const totalCad = subtotal + shippingCharge;
+  const totalUsdc = totalCad * 0.75; // Approx conversion to USDC for payment
 
   const handleContinueToPayment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +76,7 @@ export default function CheckoutPage() {
       const result = await createOrder({
         ...formData,
         paymentMethod,
-        totalUsd: totalWithShipping.toString(),
+        totalUsd: totalUsdc.toFixed(2), // Final crypto amount paid
         shippingCost: shippingCharge.toFixed(2),
         shippingService: shippingRate ? shippingRate.servicelevel.name : 'Canada Post Expedited Parcel',
         items: items, // Pass as object for the JSON column
@@ -148,7 +149,7 @@ export default function CheckoutPage() {
               {paymentMethod === 'E-TRANSFER' && (
                 <div className="bg-acid-green/10 border border-acid-green/20 p-6 rounded-xl mb-8">
                   <h3 className="text-acid-green font-bold mb-2">E-Transfer Instructions</h3>
-                  <p className="text-sm text-white/70">Please send exactly <strong>${totalWithShipping.toFixed(2)} USD</strong> (~${(totalWithShipping * 1.4).toFixed(2)} CAD) to <strong>pay@whiterabbit.com</strong>. Include your email address in the transfer notes. Your order will ship once the deposit is manually verified.</p>
+                  <p className="text-sm text-white/70">Please send exactly <strong>${totalCad.toFixed(2)} CAD</strong> (~${totalUsdc.toFixed(2)} USDC) to <strong>pay@whiterabbit.com</strong>. Include your email address in the transfer notes. Your order will ship once the deposit is manually verified.</p>
                 </div>
               )}
 
@@ -157,7 +158,7 @@ export default function CheckoutPage() {
                   disabled={isProcessing}
                   className="w-full bg-neon-pink text-black py-4 rounded-xl font-bold hover:shadow-[0_0_20px_rgba(255,0,255,0.5)] transition-all disabled:opacity-50"
                 >
-                  {isProcessing ? 'Processing...' : `Place Order • $${totalWithShipping.toFixed(2)} USDC`}
+                  {isProcessing ? 'Processing...' : `Place Order • $${totalUsdc.toFixed(2)} USDC`}
                 </button>
             </motion.div>
           )}
@@ -219,8 +220,8 @@ export default function CheckoutPage() {
             <div className="border-t border-white/10 pt-4 flex justify-between items-end">
               <span className="font-bold pb-1">Total</span>
               <div className="text-right">
-                <div className="text-2xl font-mono leading-none mb-1">${totalWithShipping.toFixed(2)} <span className="text-xs text-white/30 font-sans">USDC</span></div>
-                <div className="text-sm font-mono text-white/40 italic">~${(totalWithShipping * 1.4).toFixed(2)} CAD</div>
+                <div className="text-2xl font-mono leading-none mb-1">${totalCad.toFixed(2)} <span className="text-xs text-white/30 font-sans">CAD</span></div>
+                <div className="text-sm font-mono text-white/40 italic">~${totalUsdc.toFixed(2)} USDC</div>
               </div>
             </div>
           </div>

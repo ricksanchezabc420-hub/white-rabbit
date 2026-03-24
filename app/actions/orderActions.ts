@@ -38,15 +38,7 @@ export async function getShippingRates(addressData: any, unitCount: number) {
 
     const shippo = getShippoClient();
     if (!shippo) {
-      console.log('SHIPPO_API_KEY missing - returning mock rate for testing.');
-      return { 
-        success: true, 
-        rate: { 
-          amount: "15.00", 
-          currency: "USD",
-          servicelevel: { name: "Canada Post Expedited Parcel (MOCK)", token: "canadapost_expedited_parcel" }
-        } 
-      };
+      throw new Error('Shippo API key missing. Please configure SHIPPO_API_KEY in environment variables.');
     }
 
     const shipment = await shippo.shipment.create({
