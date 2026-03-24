@@ -68,9 +68,9 @@ export default function CheckoutPage() {
       
       clearCart();
       setStep(3);
-    } catch (error) {
-      console.error(error);
-      alert('Order failed. Please try again.');
+    } catch (error: any) {
+      console.error('Checkout error:', error);
+      alert(`Order failed: ${error.message || 'Transmission interrupted.'}`);
     } finally {
       setIsProcessing(false);
     }

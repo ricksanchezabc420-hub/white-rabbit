@@ -24,41 +24,59 @@ export async function getOrders() {
 
 export async function createOrder(orderData: any) {
   try {
-    const [newOrder] = await db.insert(orders).values({
-      ...orderData,
-      status: 'PENDING',
-    }).returning();
+    console.log('Initiating order creation for:', orderData.email);
+    
+    let newOrder;
+    try {
+      const [insertedOrder] = await db.insert(orders).values({
+        ...orderData,
+        status: 'PENDING',
+      }).returning();
+      newOrder = insertedOrder;
+      console.log('Order persisted to database:', newOrder.id);
+    } catch (dbError) {
+      console.error('Database insertion failed:', dbError);
+      return { success: false, error: 'Database persistence error.' };
+    }
 
     // Send Confirmation Emails via Gmail
-    const mailOptions = {
-      from: `"White Rabbit" <${process.env.GMAIL_USER}>`,
-      to: [newOrder.email, process.env.GMAIL_USER || ''], // Send to customer AND admin
-      subject: `Order Received #${newOrder.id.slice(0, 8)} - White Rabbit`,
-      html: `
-        <div style="font-family: serif; max-width: 600px; margin: 0 auto; padding: 40px; background: #000; color: #fff; border: 1px solid #333; border-radius: 30px;">
-          <h1 style="text-align: center; letter-spacing: 5px; color: #fff; margin-bottom: 40px;">WHITE RABBIT</h1>
-          <p style="font-style: italic; color: #888; text-align: center; margin-bottom: 40px;">A new sequence has been initiated.</p>
-          <div style="border-top: 1px solid #222; padding-top: 30px; line-height: 1.6;">
-            <p>Order ID: <span style="font-family: monospace; color: #00ffff;">#${newOrder.id.slice(0, 8)}</span></p>
-            <p>Name: <strong>${newOrder.shippingName}</strong></p>
-            <p>Total: <strong>$${newOrder.totalUsd} USDC</strong></p>
-            <p>Status: <span style="color: #bfff00;">Awaiting Fulfillment</span></p>
-            ${newOrder.paymentMethod === 'E-TRANSFER' ? '<p style="color: #ff3e3e; font-weight: bold; border: 1px solid #ff3e3e; padding: 10px; border-radius: 10px; margin-top: 20px;">* ACTION REQUIRED: Please complete your E-transfer to pay@whiterabbit.com to begin production.</p>' : ''}
+    try {
+      const mailOptions = {
+        from: `"White Rabbit" <${process.env.GMAIL_USER}>`,
+        to: [newOrder.email, process.env.GMAIL_USER || ''], // Send to customer AND admin
+        subject: `Order Received #${newOrder.id.slice(0, 8)} - White Rabbit`,
+        html: `
+          <div style="font-family: serif; max-width: 600px; margin: 0 auto; padding: 40px; background: #000; color: #fff; border: 1px solid #333; border-radius: 30px;">
+            <h1 style="text-align: center; letter-spacing: 5px; color: #fff; margin-bottom: 40px;">WHITE RABBIT</h1>
+            <p style="font-style: italic; color: #888; text-align: center; margin-bottom: 40px;">A new sequence has been initiated.</p>
+            <div style="border-top: 1px solid #222; padding-top: 30px; line-height: 1.6;">
+              <p>Order ID: <span style="font-family: monospace; color: #00ffff;">#${newOrder.id.slice(0, 8)}</span></p>
+              <p>Name: <strong>${newOrder.shippingName}</strong></p>
+              <p>Total: <strong>$${newOrder.totalUsd} USDC</strong></p>
+              <p>Status: <span style="color: #bfff00;">Awaiting Fulfillment</span></p>
+              ${newOrder.paymentMethod === 'E-TRANSFER' ? '<p style="color: #ff3e3e; font-weight: bold; border: 1px solid #ff3e3e; padding: 10px; border-radius: 10px; margin-top: 20px;">* ACTION REQUIRED: Please complete your E-transfer to pay@whiterabbit.com to begin production.</p>' : ''}
+            </div>
+            <div style="margin-top: 40px; padding: 20px; background: #111; border-radius: 15px;">
+              <p style="font-size: 12px; color: #666; margin: 0;">Shipping to: ${newOrder.shippingName}, ${newOrder.address}, ${newOrder.city}</p>
+            </div>
+            <p style="margin-top: 60px; text-align: center; font-size: 10px; color: #444; letter-spacing: 2px;">FOLLOW THE RABBIT</p>
           </div>
-          <div style="margin-top: 40px; padding: 20px; background: #111; border-radius: 15px;">
-            <p style="font-size: 12px; color: #666; margin: 0;">Shipping to: ${newOrder.shippingName}, ${newOrder.address}, ${newOrder.city}</p>
-          </div>
-          <p style="margin-top: 60px; text-align: center; font-size: 10px; color: #444; letter-spacing: 2px;">FOLLOW THE RABBIT</p>
-        </div>
-      `,
-    };
+        `,
+      };
 
-    await transporter.sendMail(mailOptions);
+      await transporter.sendMail(mailOptions);
+      console.log('Confirmation emails sent via Gmail');
+    } catch (mailError) {
+      console.error('Nodemailer failed:', mailError);
+      // We don't fail the whole order if just the email fails, 
+      // but we log it. However, if the user sees 'Order failed', 
+      // it might be because the catch block returned it.
+    }
 
     return { success: true, orderId: newOrder.id };
-  } catch (error) {
-    console.error('Order creation failed:', error);
-    return { success: false, error: 'Transmission error. Sequence interrupted.' };
+  } catch (error: any) {
+    console.error('Fatal order creation error:', error);
+    return { success: false, error: error.message || 'Sequence interrupted.' };
   }
 }
 
