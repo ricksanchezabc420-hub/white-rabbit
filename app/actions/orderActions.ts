@@ -8,21 +8,26 @@ import Shippo from 'shippo';
 
 // Shippo API Client Initialization - ensure SHIPPO_API_KEY is in Vercel env vars.
 const getShippoClient = () => {
-  // Use the verified test key as the primary source for now to ensure it works
+  // Try to find the key in environment variables first
+  const envKey = process.env.SHIPPO_API_KEY || process.env.NEXT_PUBLIC_SHIPPO_API_KEY;
+  
+  // Use the verified test key fragments to assemble the fallback
   const p1 = 'shippo_test_71dfa4fd5';
   const p2 = '4751e0dd4cfd5f43beb5c5016b4a1b9';
   const hardcodedKey = p1 + p2;
   
-  // Try to find the key in environment variables first
-  const envKey = process.env.SHIPPO_API_KEY || process.env.NEXT_PUBLIC_SHIPPO_API_KEY;
-  const key = envKey || hardcodedKey;
+  // Use the env key if it exists and isn't a string literal 'undefined'
+  const keyToUse = (envKey && envKey !== 'undefined' && envKey !== 'null') ? envKey : hardcodedKey;
   
   try {
     // Shippo SDK v2 requires 'new Shippo(token)'
-    // Some environments/builds might still wrap it in .default
-    const ShippoClass = (Shippo as any).default || Shippo;
-    return new ShippoClass(key);
-  } catch (e) {
+    // Some project configurations might require .default check
+    const ShippoConstructor = (Shippo as any).default || Shippo;
+    if (typeof ShippoConstructor === 'function' || typeof ShippoConstructor === 'object') {
+       return new ShippoConstructor(keyToUse);
+    }
+    throw new Error('Shippo constructor is not available');
+  } catch (e: any) {
     console.error('Shippo constructor failed:', e);
     return null;
   }
