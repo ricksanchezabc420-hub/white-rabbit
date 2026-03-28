@@ -193,8 +193,9 @@ export async function createOrder(orderData: any) {
         }
       }
     } catch (dbError: any) {
-      console.error('DB Insert Error (v4.10):', dbError);
-      throw new Error(`DB Fail: ${dbError.message || 'Check logs'}`);
+      console.error('DB Insert Error (v4.16):', dbError);
+      const detail = dbError.detail || dbError.message || 'Check Server Logs';
+      throw new Error(`DB Fail: ${detail}`);
     }
 
     if (!newOrder) {
