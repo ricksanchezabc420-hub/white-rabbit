@@ -121,9 +121,16 @@ export default function CheckoutPage() {
           console.warn('CRITICAL: Admin wallet is not configured. Using fallback safely for testing.');
         }
 
+        // v4.22: Dynamic Value Calculation
+        // Recommendation: In production, fetch a real-time price feed (e.g. Chainlink)
+        // For now, we use a placeholder rate (e.g. 1 ETH = $3000 CAD)
+        const ethRate = 3000; 
+        const cryptoValue = (totalCad / ethRate).toFixed(6);
+        console.log(`Calculating dynamic crypto value: $${totalCad} CAD -> ${cryptoValue} ETH`);
+
         const hash = await sendTransactionAsync({
           to: ADMIN_WALLET as `0x${string}`, 
-          value: parseEther('0.001'), // Modernized placeholder (0.001 ETH/POL)
+          value: parseEther(cryptoValue),
         });
         transactionHash = hash;
       }
@@ -134,7 +141,7 @@ export default function CheckoutPage() {
         totalAmount: totalCad.toFixed(2),
         shippingCost: shippingCharge.toFixed(2),
         shippingService: shippingRate ? shippingRate.servicelevel.name : 'Canada Post Expedited Parcel',
-        items: items, // Pass directly as array (Drizzle handles JSONB)
+        items: items, 
         walletAddress: address || null, 
         transactionHash: transactionHash,
         discountCode: appliedDiscount?.code || null,
