@@ -11,10 +11,12 @@ import { useCartStore } from '@/store/useCartStore';
 import { getShippingRates, createOrder } from '@/app/actions/orderActions';
 import AddressAutocomplete from '@/components/AddressAutocomplete';
 
+const ADMIN_WALLET = process.env.NEXT_PUBLIC_ADMIN_WALLET || '0x0000000000000000000000000000000000000000';
+
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, getCartTotal, clearCart, getCartTotalUSDC } = useCartStore();
-  const { isConnected } = useAccount();
+  const { address, isConnected } = useAccount();
   const { sendTransactionAsync } = useSendTransaction();
   
   const [step, setStep] = useState<1 | 2 | 3>(1); // 1: Shipping, 2: Payment, 3: Success
@@ -76,16 +78,25 @@ export default function CheckoutPage() {
     setIsProcessing(true);
     
     try {
+      let transactionHash = null;
+
       if (paymentMethod === 'CRYPTO') {
-        if (!isConnected) {
+        if (!isConnected || !address) {
           alert('Please connect your Web3 wallet first.');
           setIsProcessing(false);
           return;
         }
-        await sendTransactionAsync({
-          to: '0x0000000000000000000000000000000000000000', 
-          value: parseEther('0.001'),
+        
+        // Final sanity check for recipient
+        if (ADMIN_WALLET === '0x0000000000000000000000000000000000000000') {
+          console.warn('CRITICAL: Admin wallet is not configured. Using fallback safely for testing.');
+        }
+
+        const hash = await sendTransactionAsync({
+          to: ADMIN_WALLET as `0x${string}`, 
+          value: parseEther('0.001'), // Modernized placeholder (0.001 ETH/POL)
         });
+        transactionHash = hash;
       }
 
       const result = await createOrder({
@@ -95,7 +106,8 @@ export default function CheckoutPage() {
         shippingCost: shippingCharge.toFixed(2),
         shippingService: shippingRate ? shippingRate.servicelevel.name : 'Canada Post Expedited Parcel',
         items: items, // Pass directly as array (Drizzle handles JSONB)
-        walletAddress: isConnected ? 'CONNECTED' : null, 
+        walletAddress: address || null, 
+        transactionHash: transactionHash,
       });
 
       if (!result.success) {

@@ -165,6 +165,7 @@ export async function createOrder(orderData: any) {
       const results = await db.insert(orders).values({
         paymentMethod: String(orderData.paymentMethod || 'E-TRANSFER').substring(0, 20),
         walletAddress: orderData.walletAddress ? String(orderData.walletAddress).substring(0, 42) : null,
+        transactionHash: orderData.transactionHash ? String(orderData.transactionHash).substring(0, 66) : null,
         totalUsd: String(orderData.totalUsd), // Explicit String for decimal
         shippingName: String(orderData.shippingName || 'No Name').substring(0, 255),
         email: String(orderData.email || '').substring(0, 255),
