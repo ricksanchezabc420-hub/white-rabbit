@@ -131,7 +131,7 @@ export default function CheckoutPage() {
       const result = await createOrder({
         ...formData,
         paymentMethod,
-        totalUsd: totalUsdc.toFixed(2),
+        totalAmount: totalCad.toFixed(2),
         shippingCost: shippingCharge.toFixed(2),
         shippingService: shippingRate ? shippingRate.servicelevel.name : 'Canada Post Expedited Parcel',
         items: items, // Pass directly as array (Drizzle handles JSONB)

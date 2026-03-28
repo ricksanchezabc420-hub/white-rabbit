@@ -15,7 +15,7 @@ export const orders = pgTable('orders', {
   walletAddress: varchar('wallet_address', { length: 42 }), 
   transactionHash: varchar('transaction_hash', { length: 66 }).unique(), 
   status: varchar('status', { length: 50 }).notNull().default('PENDING'), 
-  totalUsd: decimal('total_usd', { precision: 10, scale: 2 }).notNull(),
+  totalAmount: decimal('total_amount', { precision: 10, scale: 2 }).notNull(),
   discountCode: varchar('discount_code', { length: 50 }),
   discountAmount: decimal('discount_amount', { precision: 10, scale: 2 }),
   shippingName: varchar('shipping_name', { length: 255 }).notNull(),

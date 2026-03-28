@@ -151,7 +151,7 @@ export default function AdminOrdersPage() {
                         </div>
                       ))}
                     </div>
-                    <div className="mt-4 text-white font-mono font-bold">${order.totalUsd} USDC</div>
+                    <div className="mt-4 text-white font-mono font-bold">${order.totalAmount} CAD</div>
                   </div>
 
                   {/* Actions */}

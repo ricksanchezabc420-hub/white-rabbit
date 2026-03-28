@@ -163,17 +163,17 @@ export async function createOrder(orderData: any) {
     let newOrder;
     try {
       const results = await db.insert(orders).values({
-        paymentMethod: String(orderData.paymentMethod || 'E-TRANSFER').substring(0, 20),
+        paymentMethod: orderData.paymentMethod,
         walletAddress: orderData.walletAddress ? String(orderData.walletAddress).substring(0, 42) : null,
         transactionHash: orderData.transactionHash ? String(orderData.transactionHash).substring(0, 66) : null,
-        totalUsd: String(orderData.totalUsd), // Explicit String for decimal
+        totalAmount: orderData.totalAmount,
         shippingName: String(orderData.shippingName || 'No Name').substring(0, 255),
         email: String(orderData.email || '').substring(0, 255),
         address: addressStr.substring(0, 255),
         city: String(orderData.city || '').substring(0, 255),
         stateProvince: String(orderData.stateProvince || '').substring(0, 255),
-        postalCode: String(orderData.postalCode || '').substring(0, 50),
-        country: String(orderData.country || 'CA').substring(0, 100),
+        postalCode: String(orderData.postalCode).substring(0, 20),
+        country: String(orderData.country).substring(0, 100),
         items: itemsData, // Drizzle handles jsonb if object is passed
         shippingCost: String(orderData.shippingCost || "0.00"),
         shippingService: String(orderData.shippingService || 'Standard').substring(0, 100),
@@ -213,7 +213,7 @@ export async function createOrder(orderData: any) {
             <p style="font-style: italic; color: #00ffff; text-align: center; margin-bottom: 40px;">Order confirmed. The sequence is being prepared.</p>
             <div style="border-top: 1px solid #222; padding-top: 30px; line-height: 1.6;">
               <p>Order ID: <span style="font-family: monospace; color: #bfff00;">WR${newOrder.id}</span></p>
-              <p>Total: <strong>$${newOrder.totalUsd} USDC</strong></p>
+              <p>Total: <strong>$${newOrder.totalAmount} CAD</strong></p>
               ${newOrder.discountCode ? `<p style="color: #bfff00; font-size: 12px;">Discount Applied: ${newOrder.discountCode} (-$${newOrder.discountAmount})</p>` : ''}
               ${newOrder.paymentMethod === 'E-TRANSFER' ? '<p style="color: #ff3e3e; font-weight: bold; border: 1px solid #ff3e3e; padding: 10px; border-radius: 10px; margin-top: 20px;">* ACTION REQUIRED: Please complete your E-transfer to pay@whiterabbit.com to begin production.</p>' : ''}
             </div>
@@ -317,25 +317,46 @@ export async function generateShippingLabel(orderId: number) {
     });
 
     const shipment = await shpResponse.json();
-    const rates = shipment.rates.filter((r: any) => r.servicelevel.token === 'canadapost_expedited_parcel');
-    const rate = rates.length > 0 ? rates[0] : shipment.rates[0];
+    let rates = shipment.rates.filter((r: any) => r.servicelevel.token === 'canadapost_expedited_parcel');
+    let rate = rates.length > 0 ? rates[0] : shipment.rates[0];
+
+    // TEST MODE FALLBACK
+    const isTest = token.startsWith('shippo_test_');
+    if (!rate && isTest) {
+      console.log('Shippo Test Mode: Providing dummy rate fallback.');
+      rate = {
+        object_id: 'dummy_rate_' + Date.now(),
+        servicelevel: { name: 'Expedited Parcel (Test Fallback)', token: 'canadapost_expedited_parcel' },
+        amount: '15.00',
+        currency: 'CAD'
+      };
+    }
 
     if (!rate) throw new Error('No rate found for label generation.');
 
-    const txResponse = await fetch('https://api.goshippo.com/transactions/', {
-      method: 'POST',
-      headers: {
-        'Authorization': `ShippoToken ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        rate: rate.object_id,
-        label_file_type: 'PDF',
-        async: false,
-      }),
-    });
-
-    const transaction = await txResponse.json();
+    let transaction;
+    if (rate.object_id.startsWith('dummy_rate_')) {
+      transaction = {
+        status: 'SUCCESS',
+        tracking_number: 'WR-TEST-' + Math.random().toString(36).substring(2, 10).toUpperCase(),
+        label_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', // Public dummy PDF
+        messages: []
+      };
+    } else {
+      const txResponse = await fetch('https://api.goshippo.com/transactions/', {
+        method: 'POST',
+        headers: {
+          'Authorization': `ShippoToken ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          rate: rate.object_id,
+          label_file_type: 'PDF',
+          async: false,
+        }),
+      });
+      transaction = await txResponse.json();
+    }
 
     if (transaction.status === 'ERROR') {
       throw new Error(transaction.messages[0]?.text || 'Shippo purchase failed.');
@@ -361,7 +382,7 @@ export async function generateShippingLabel(orderId: number) {
             <p style="text-align: center; font-size: 18px; color: #00ffff; margin-bottom: 30px;">Your shipment is in transit.</p>
             <div style="border-top: 1px solid #222; padding-top: 30px; line-height: 1.6;">
               <p>Tracking Number: <span style="font-family: monospace; color: #00ffff; font-weight: bold;">${transaction.tracking_number}</span></p>
-              <p>Carrier: <strong>Canada Post</strong></p>
+              <p>Carrier: <strong>${transaction.tracking_number.startsWith('WR-TEST') ? 'WHITERABBIT-TEST' : 'Canada Post'}</strong></p>
               <p>Service: <strong>${rate.servicelevel.name}</strong></p>
             </div>
             <div style="margin-top: 40px; text-align: center;">

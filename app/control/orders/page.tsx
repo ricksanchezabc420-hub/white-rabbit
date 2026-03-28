@@ -172,7 +172,7 @@ export default function FulfillmentPage() {
                     </div>
                     <div className="mt-6 pt-4 border-t border-white/5 flex justify-between items-center overflow-hidden">
                       <span className="text-[10px] font-mono text-white/30 uppercase">Revenue</span>
-                      <span className="text-lg font-mono text-white">${order.totalUsd} <span className="text-[10px] text-white/30">USDC</span></span>
+                      <span className="text-lg font-mono text-white">${order.totalAmount} <span className="text-[10px] text-white/30">CAD</span></span>
                     </div>
                   </div>
 
