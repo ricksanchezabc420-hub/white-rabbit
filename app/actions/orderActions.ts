@@ -23,9 +23,11 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function getOrders() {
-  return await db.query.orders.findMany({
+  const data = await db.query.orders.findMany({
     orderBy: [desc(orders.createdAt)],
   });
+  console.log(`[getOrders] Sequence found: ${data.length} records.`);
+  return data;
 }
 
 export async function getShippingRates(addressData: any, unitCount: number) {
