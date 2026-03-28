@@ -2,8 +2,8 @@
 
 import { db } from '@/db';
 import { orders, discounts } from '@/db/schema';
-import { eq, desc } from 'drizzle-orm';
-import nodemailer from 'nodemailer';
+import { eq, desc, sql } from 'drizzle-orm';
+import { Resend } from 'resend';
 
 // Diagnostic: Version 4.0 - Direct REST API Integration (No SDK)
 const getShippoKey = () => {
@@ -14,24 +14,7 @@ const getShippoKey = () => {
   return (envKey && envKey !== 'undefined' && envKey !== 'null') ? envKey : hardcodedKey;
 };
 
-const transporter = nodemailer.createTransport({
-  pool: true, // Reuse connections for efficiency
-  host: 'smtp.office365.com',
-  port: 587,
-  secure: false, // Use STARTTLS
-  auth: {
-    user: process.env.SMTP_USER || process.env.GMAIL_USER,
-    pass: process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD,
-  },
-  tls: {
-    minVersion: 'TLSv1.2',
-    rejectUnauthorized: false
-  },
-  requireTLS: true,
-  connectionTimeout: 10000, // 10 seconds
-  greetingTimeout: 10000,
-  socketTimeout: 20000
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function getOrders() {
   const data = await db.query.orders.findMany({
@@ -155,22 +138,16 @@ export async function getShippingRates(addressData: any, unitCount: number) {
   }
 }
 
-import { sql } from 'drizzle-orm';
-
 export async function createOrder(orderData: any) {
   try {
     console.log('--- Incoming Order (v4.16 CONSOLIDATED) ---');
     
-    // v4.16: Migration to consolidated 'orders' table (SERIAL ID) complete.
-    // Legacy orders_v2 creation logic removed.
-
     // v4.15 Strict Data Cleaning
     const addressStr = String(orderData.address || '').trim();
     if (!addressStr) {
       throw new Error("Address is required. Please re-select it in the autocomplete field.");
     }
 
-    // v4.10: Database now handles ID via serial/identity
     const itemsData = Array.isArray(orderData.items) ? orderData.items : JSON.parse(orderData.items || '[]');
 
     let newOrder;
@@ -187,7 +164,7 @@ export async function createOrder(orderData: any) {
         stateProvince: String(orderData.stateProvince || '').substring(0, 255),
         postalCode: String(orderData.postalCode).substring(0, 20),
         country: String(orderData.country).substring(0, 100),
-        items: itemsData, // Drizzle handles jsonb if object is passed
+        items: itemsData, 
         shippingCost: String(orderData.shippingCost || "0.00"),
         shippingService: String(orderData.shippingService || 'Standard').substring(0, 100),
         discountCode: orderData.discountCode ? String(orderData.discountCode).substring(0, 50) : null,
@@ -215,11 +192,11 @@ export async function createOrder(orderData: any) {
       throw new Error("Failed to retrieve the inserted order record.");
     }
 
-    // Send Confirmation via Gmail
+    // Send Confirmation via Resend
     try {
-      const mailOptions = {
-        from: `"White Rabbit" <${process.env.SMTP_USER || process.env.GMAIL_USER}>`,
-        to: newOrder.email,
+      await resend.emails.send({
+        from: 'White Rabbit <onboarding@resend.dev>',
+        to: [newOrder.email],
         subject: `The Hunt Begins: Order WR${newOrder.id}`,
         html: `
           <div style="font-family: serif; max-width: 600px; margin: 0 auto; padding: 40px; background: #000; color: #fff; border: 1px solid #333; border-radius: 30px;">
@@ -237,11 +214,9 @@ export async function createOrder(orderData: any) {
             <p style="margin-top: 60px; text-align: center; font-size: 10px; color: #444; letter-spacing: 2px;">FOLLOW THE RABBIT</p>
           </div>
         `,
-      };
-
-      await transporter.sendMail(mailOptions);
+      });
     } catch (mailError) {
-      console.error('Nodemailer failed:', mailError);
+      console.error('Resend failed:', mailError);
     }
 
     return { success: true, orderId: newOrder.id };
@@ -262,28 +237,30 @@ export async function updateOrderTracking(orderId: number, trackingNumber: strin
       .where(eq(orders.id, orderId))
       .returning();
 
-    // Send Shipping Confirmation via Gmail
-    const mailOptions = {
-      from: `"White Rabbit" <${process.env.SMTP_USER || process.env.GMAIL_USER}>`,
-      to: updatedOrder.email,
-      subject: `Order Shipped #WR${updatedOrder.id} - White Rabbit`,
-      html: `
-        <div style="font-family: serif; max-width: 600px; margin: 0 auto; padding: 40px; background: #000; color: #fff; border: 1px solid #333; border-radius: 30px;">
-          <h1 style="text-align: center; letter-spacing: 5px; color: #fff; margin-bottom: 40px;">WHITE RABBIT</h1>
-          <p style="font-style: italic; color: #00ffff; text-align: center; margin-bottom: 40px;">The rabbit is on the move.</p>
-          <div style="border-top: 1px solid #222; padding-top: 30px; line-height: 1.6;">
-            <p>Your artifacts have been dispatched.</p>
-            <p>Tracking Code: <span style="font-family: monospace; color: #bfff00; font-size: 20px; letter-spacing: 2px;">${trackingNumber}</span></p>
+    // Send Shipping Confirmation via Resend
+    try {
+      await resend.emails.send({
+        from: 'White Rabbit <onboarding@resend.dev>',
+        to: [updatedOrder.email],
+        subject: `Order Shipped #WR${updatedOrder.id} - White Rabbit`,
+        html: `
+          <div style="font-family: serif; max-width: 600px; margin: 0 auto; padding: 40px; background: #000; color: #fff; border: 1px solid #333; border-radius: 30px;">
+            <h1 style="text-align: center; letter-spacing: 5px; color: #fff; margin-bottom: 40px;">WHITE RABBIT</h1>
+            <p style="font-style: italic; color: #00ffff; text-align: center; margin-bottom: 40px;">The rabbit is on the move.</p>
+            <div style="border-top: 1px solid #222; padding-top: 30px; line-height: 1.6;">
+              <p>Your artifacts have been dispatched.</p>
+              <p>Tracking Code: <span style="font-family: monospace; color: #bfff00; font-size: 20px; letter-spacing: 2px;">${trackingNumber}</span></p>
+            </div>
+            <div style="margin-top: 40px; text-align: center;">
+               <p style="color: #666; font-size: 11px;">Track your package via your preferred carrier with the code above.</p>
+            </div>
+            <p style="margin-top: 60px; text-align: center; font-size: 10px; color: #444; letter-spacing: 2px;">THE SEQUENCE COMPLETES SOON</p>
           </div>
-          <div style="margin-top: 40px; text-align: center;">
-             <p style="color: #666; font-size: 11px;">Track your package via your preferred carrier with the code above.</p>
-          </div>
-          <p style="margin-top: 60px; text-align: center; font-size: 10px; color: #444; letter-spacing: 2px;">THE SEQUENCE COMPLETES SOON</p>
-        </div>
-      `,
-    };
-
-    await transporter.sendMail(mailOptions);
+        `,
+      });
+    } catch (mailError) {
+      console.error('Resend shipping mail failed:', mailError);
+    }
 
     return { success: true };
   } catch (error) {
@@ -331,8 +308,8 @@ export async function generateShippingLabel(orderId: number) {
     });
 
     const shipment = await shpResponse.json();
-    let rates = shipment.rates.filter((r: any) => r.servicelevel.token === 'canadapost_expedited_parcel');
-    let rate = rates.length > 0 ? rates[0] : shipment.rates[0];
+    let rates = (shipment.rates || []).filter((r: any) => r.servicelevel.token === 'canadapost_expedited_parcel');
+    let rate = rates.length > 0 ? rates[0] : (shipment.rates ? shipment.rates[0] : null);
 
     // TEST MODE FALLBACK
     const isTest = token.startsWith('shippo_test_');
@@ -353,7 +330,7 @@ export async function generateShippingLabel(orderId: number) {
       transaction = {
         status: 'SUCCESS',
         tracking_number: 'WR-TEST-' + Math.random().toString(36).substring(2, 10).toUpperCase(),
-        label_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', // Public dummy PDF
+        label_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', 
         messages: []
       };
     } else {
@@ -386,9 +363,9 @@ export async function generateShippingLabel(orderId: number) {
       .where(eq(orders.id, orderId));
 
     try {
-      const mailOptions = {
-        from: `"White Rabbit" <${process.env.SMTP_USER || process.env.GMAIL_USER}>`,
-        to: order.email,
+      await resend.emails.send({
+        from: 'White Rabbit <onboarding@resend.dev>',
+        to: [order.email],
         subject: `Your White Rabbit has Shipped! 📦`,
         html: `
           <div style="font-family: serif; max-width: 600px; margin: 0 auto; padding: 40px; background: #000; color: #fff; border: 1px solid #333; border-radius: 30px;">
@@ -400,18 +377,14 @@ export async function generateShippingLabel(orderId: number) {
               <p>Service: <strong>${rate.servicelevel.name}</strong></p>
             </div>
             <div style="margin-top: 40px; text-align: center;">
-              <a href="https://www.canadapost-postescanada.ca/track-reperage/en#/resultList?searchFor=${transaction.tracking_number}" 
-                 style="display: inline-block; padding: 15px 30px; background: #fff; color: #000; text-decoration: none; border-radius: 50px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">
-                 Track My Package
-              </a>
+               <p style="color: #666; font-size: 11px;">Track your package via your preferred carrier with the code above.</p>
             </div>
             <p style="margin-top: 60px; text-align: center; font-size: 10px; color: #444; letter-spacing: 2px;">THE SEQUENCE COMPLETES SOON</p>
           </div>
         `,
-      };
-      await transporter.sendMail(mailOptions);
+      });
     } catch (mailError) {
-      console.error('Shipping email failed:', mailError);
+      console.error('Resend failed:', mailError);
     }
 
     return { 
