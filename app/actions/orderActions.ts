@@ -15,18 +15,18 @@ const getShippoKey = () => {
 };
 
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+  host: 'smtp.office365.com', // More reliable for Outlook/Office365
+  port: 587,
+  secure: false, // Use STARTTLS
   auth: {
     user: process.env.SMTP_USER || process.env.GMAIL_USER,
     pass: process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD,
   },
   tls: {
-    // Necessary for some serverless environments and certain providers like Outlook
-    ciphers: 'SSLv3',
+    // Necessary for some serverless environments like Vercel
     rejectUnauthorized: false
-  }
+  },
+  requireTLS: true
 });
 
 export async function getOrders() {
