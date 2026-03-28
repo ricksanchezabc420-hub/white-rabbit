@@ -145,7 +145,7 @@ export default function AdminOrdersPage() {
                   <div className="lg:w-1/4">
                     <div className="text-xs font-mono text-white/30 mb-2">ITEMS</div>
                     <div className="space-y-1">
-                      {JSON.parse(order.items).map((item: any, idx: number) => (
+                      {(typeof order.items === 'string' ? JSON.parse(order.items) : order.items).map((item: any, idx: number) => (
                         <div key={idx} className="text-sm text-white/80 flex justify-between">
                           <span>{item.name} x {item.quantity}</span>
                         </div>
@@ -175,7 +175,7 @@ export default function AdminOrdersPage() {
                       <div className="bg-white/5 p-4 rounded-xl border border-white/5">
                         <div className="text-[10px] font-mono text-white/30 mb-1 uppercase">TRACKING NUMBER</div>
                         <div className="text-white font-mono text-xs">{order.trackingNumber}</div>
-                        <div className="text-[10px] font-mono text-white/20 mt-2">SHIPPED AT: {new Date(order.shippedAt!).toLocaleDateString()}</div>
+                        <div className="text-[10px] font-mono text-white/20 mt-2">SHIPPED AT: {order.shippedAt ? new Date(order.shippedAt).toLocaleDateString() : 'N/A'}</div>
                       </div>
                     )}
                   </div>

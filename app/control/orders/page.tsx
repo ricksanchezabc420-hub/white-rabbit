@@ -164,7 +164,7 @@ export default function FulfillmentPage() {
                   <div className="lg:w-1/4">
                     <div className="text-[10px] font-mono text-white/30 uppercase mb-3">Contents</div>
                     <div className="space-y-2">
-                      {JSON.parse(order.items).map((item: any, i: number) => (
+                      {(typeof order.items === 'string' ? JSON.parse(order.items) : order.items).map((item: any, i: number) => (
                         <div key={i} className="flex justify-between text-xs">
                           <span className="text-white/80">{item.name} <span className="text-white/30">x{item.quantity}</span></span>
                         </div>
