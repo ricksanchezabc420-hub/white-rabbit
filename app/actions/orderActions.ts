@@ -15,11 +15,18 @@ const getShippoKey = () => {
 };
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: parseInt(process.env.SMTP_PORT || '587'),
+  secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
   auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
+    user: process.env.SMTP_USER || process.env.GMAIL_USER,
+    pass: process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD,
   },
+  tls: {
+    // Necessary for some serverless environments and certain providers like Outlook
+    ciphers: 'SSLv3',
+    rejectUnauthorized: false
+  }
 });
 
 export async function getOrders() {
@@ -207,7 +214,7 @@ export async function createOrder(orderData: any) {
     // Send Confirmation via Gmail
     try {
       const mailOptions = {
-        from: `"White Rabbit" <${process.env.GMAIL_USER}>`,
+        from: `"White Rabbit" <${process.env.SMTP_USER || process.env.GMAIL_USER}>`,
         to: newOrder.email,
         subject: `The Hunt Begins: Order WR${newOrder.id}`,
         html: `
@@ -253,7 +260,7 @@ export async function updateOrderTracking(orderId: number, trackingNumber: strin
 
     // Send Shipping Confirmation via Gmail
     const mailOptions = {
-      from: `"White Rabbit" <${process.env.GMAIL_USER}>`,
+      from: `"White Rabbit" <${process.env.SMTP_USER || process.env.GMAIL_USER}>`,
       to: updatedOrder.email,
       subject: `Order Shipped #WR${updatedOrder.id} - White Rabbit`,
       html: `
@@ -376,7 +383,7 @@ export async function generateShippingLabel(orderId: number) {
 
     try {
       const mailOptions = {
-        from: `"White Rabbit" <${process.env.GMAIL_USER}>`,
+        from: `"White Rabbit" <${process.env.SMTP_USER || process.env.GMAIL_USER}>`,
         to: order.email,
         subject: `Your White Rabbit has Shipped! 📦`,
         html: `
