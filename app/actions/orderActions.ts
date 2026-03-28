@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/db';
-import { orders } from '@/db/schema';
+import { orders, discounts } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import nodemailer from 'nodemailer';
 
@@ -177,8 +177,21 @@ export async function createOrder(orderData: any) {
         items: itemsData, // Drizzle handles jsonb if object is passed
         shippingCost: String(orderData.shippingCost || "0.00"),
         shippingService: String(orderData.shippingService || 'Standard').substring(0, 100),
+        discountCode: orderData.discountCode ? String(orderData.discountCode).substring(0, 50) : null,
+        discountAmount: orderData.discountAmount ? String(orderData.discountAmount) : null,
       }).returning();
       newOrder = results[0];
+
+      // Increment discount usage if applicable
+      if (orderData.discountCode) {
+        try {
+          await db.update(discounts)
+            .set({ usedCount: sql`${discounts.usedCount} + 1` })
+            .where(eq(discounts.code, orderData.discountCode.toUpperCase().trim()));
+        } catch (updateError) {
+          console.error('Failed to increment discount usage:', updateError);
+        }
+      }
     } catch (dbError: any) {
       console.error('DB Insert Error (v4.10):', dbError);
       throw new Error(`DB Fail: ${dbError.message || 'Check logs'}`);
@@ -201,6 +214,7 @@ export async function createOrder(orderData: any) {
             <div style="border-top: 1px solid #222; padding-top: 30px; line-height: 1.6;">
               <p>Order ID: <span style="font-family: monospace; color: #bfff00;">WR${newOrder.id}</span></p>
               <p>Total: <strong>$${newOrder.totalUsd} USDC</strong></p>
+              ${newOrder.discountCode ? `<p style="color: #bfff00; font-size: 12px;">Discount Applied: ${newOrder.discountCode} (-$${newOrder.discountAmount})</p>` : ''}
               ${newOrder.paymentMethod === 'E-TRANSFER' ? '<p style="color: #ff3e3e; font-weight: bold; border: 1px solid #ff3e3e; padding: 10px; border-radius: 10px; margin-top: 20px;">* ACTION REQUIRED: Please complete your E-transfer to pay@whiterabbit.com to begin production.</p>' : ''}
             </div>
             <div style="margin-top: 40px; padding: 20px; background: #111; border-radius: 15px;">

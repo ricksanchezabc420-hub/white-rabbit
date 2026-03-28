@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { getOrders, updateOrderTracking } from '@/app/actions/orderActions';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldCheck, Package, ExternalLink, CheckCircle2, Truck } from 'lucide-react';
+import { ShieldCheck, Package, ExternalLink, CheckCircle2, Truck, Tag, Settings } from 'lucide-react';
+import AdminDiscountManager from '@/components/AdminDiscountManager';
 
 // Replace with your actual admin wallet address
 const ADMIN_WALLET = process.env.NEXT_PUBLIC_ADMIN_WALLET || '0x0000000000000000000000000000000000000000';
@@ -14,6 +15,7 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [trackingInput, setTrackingInput] = useState<{ [key: number]: string }>({});
+  const [activeTab, setActiveTab] = useState<'orders' | 'discounts'>('orders');
 
   const isAdmin = isConnected && address?.toLowerCase() === ADMIN_WALLET.toLowerCase();
 
@@ -78,16 +80,35 @@ export default function AdminOrdersPage() {
           </div>
         </div>
 
-        {isLoading ? (
-          <div className="flex justify-center items-center py-24">
-            <div className="w-8 h-8 border-2 border-neon-pink border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-6">
-            {orders.length === 0 ? (
-              <div className="text-center py-24 glass rounded-3xl border border-white/5">
-                <Package className="w-12 h-12 text-white/10 mx-auto mb-4" />
-                <p className="text-white/30">No orders found in the temporal stream.</p>
+        {/* Tab Navigation */}
+        <div className="flex gap-4 mb-8 border-b border-white/5 pb-px">
+          <button 
+            onClick={() => setActiveTab('orders')}
+            className={`flex items-center gap-2 px-6 py-3 text-sm font-bold tracking-wider uppercase transition-all relative ${
+              activeTab === 'orders' ? 'text-white' : 'text-white/30 hover:text-white/60'
+            }`}
+          >
+            <Package className="w-4 h-4" />
+            Fulfillment Hub
+            {activeTab === 'orders' && <motion.div layoutId="admin-tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-neon-pink shadow-[0_0_10px_rgba(255,0,255,0.5)]" />}
+          </button>
+          <button 
+            onClick={() => setActiveTab('discounts')}
+            className={`flex items-center gap-2 px-6 py-3 text-sm font-bold tracking-wider uppercase transition-all relative ${
+              activeTab === 'discounts' ? 'text-white' : 'text-white/30 hover:text-white/60'
+            }`}
+          >
+            <Tag className="w-4 h-4" />
+            Discount Sequences
+            {activeTab === 'discounts' && <motion.div layoutId="admin-tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-vibrant-purple shadow-[0_0_10px_rgba(157,0,255,0.5)]" />}
+          </button>
+        </div>
+
+        {activeTab === 'orders' ? (
+          <>
+            {isLoading ? (
+              <div className="flex justify-center items-center py-24">
+                <div className="w-8 h-8 border-2 border-neon-pink border-t-transparent rounded-full animate-spin" />
               </div>
             ) : (
               orders.map((order) => (
@@ -161,7 +182,9 @@ export default function AdminOrdersPage() {
                 </motion.div>
               ))
             )}
-          </div>
+          </>
+        ) : (
+          <AdminDiscountManager />
         )}
       </div>
     </div>

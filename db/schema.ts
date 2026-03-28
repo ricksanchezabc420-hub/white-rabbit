@@ -16,6 +16,8 @@ export const orders = pgTable('orders', {
   transactionHash: varchar('transaction_hash', { length: 66 }).unique(), 
   status: varchar('status', { length: 50 }).notNull().default('PENDING'), 
   totalUsd: decimal('total_usd', { precision: 10, scale: 2 }).notNull(),
+  discountCode: varchar('discount_code', { length: 50 }),
+  discountAmount: decimal('discount_amount', { precision: 10, scale: 2 }),
   shippingName: varchar('shipping_name', { length: 255 }).notNull(),
   email: varchar('email', { length: 255 }).notNull(),
   address: varchar('address', { length: 255 }).notNull(),
@@ -29,5 +31,19 @@ export const orders = pgTable('orders', {
   trackingNumber: varchar('tracking_number', { length: 255 }),
   shippedAt: timestamp('shipped_at'),
   labelUrl: varchar('label_url', { length: 500 }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const discounts = pgTable('discounts', {
+  id: serial('id').primaryKey(),
+  code: varchar('code', { length: 50 }).notNull().unique(),
+  description: varchar('description', { length: 255 }),
+  discountType: varchar('discount_type', { length: 20 }).notNull().default('percentage'), // percentage, fixed
+  discountValue: decimal('discount_value', { precision: 10, scale: 2 }).notNull(),
+  minOrderAmount: decimal('min_order_amount', { precision: 10, scale: 2 }),
+  maxUses: integer('max_uses'),
+  usedCount: integer('used_count').default(0),
+  isActive: integer('is_active').default(1), // 1 for true, 0 for false (SQLite-style if needed, but Drizzle pg supports boolean too)
+  expiresAt: timestamp('expires_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });

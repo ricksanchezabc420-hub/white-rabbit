@@ -4,11 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ShieldCheck, Wallet, Truck, Package, Info, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, Wallet, Truck, Package, Info, CheckCircle2, Trash2 } from 'lucide-react';
 import { useAccount, useSendTransaction } from 'wagmi';
 import { parseEther } from 'viem';
 import { useCartStore } from '@/store/useCartStore';
 import { getShippingRates, createOrder } from '@/app/actions/orderActions';
+import { validateDiscount } from '@/app/actions/discountActions';
 import AddressAutocomplete from '@/components/AddressAutocomplete';
 
 const ADMIN_WALLET = process.env.NEXT_PUBLIC_ADMIN_WALLET || '0x0000000000000000000000000000000000000000';
@@ -25,6 +26,12 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<'CRYPTO' | 'E-TRANSFER'>('CRYPTO');
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Discount state
+  const [discountCode, setDiscountCode] = useState('');
+  const [appliedDiscount, setAppliedDiscount] = useState<any>(null);
+  const [isValidatingDiscount, setIsValidatingDiscount] = useState(false);
+  const [discountError, setDiscountError] = useState('');
+
   const [formData, setFormData] = useState({
     shippingName: '',
     email: '',
@@ -38,7 +45,9 @@ export default function CheckoutPage() {
   const subtotal = getCartTotal();
   const isFreeShipping = subtotal >= 150;
   const shippingCharge = isFreeShipping ? 0 : (shippingRate ? parseFloat(shippingRate.amount) : 0);
-  const totalCad = subtotal + shippingCharge;
+  
+  const discountAmount = appliedDiscount ? parseFloat(appliedDiscount.amount) : 0;
+  const totalCad = Math.max(0, subtotal + shippingCharge - discountAmount);
   const totalUsdc = totalCad * 0.75; 
 
   const handleAddressSelected = (addressData: any) => {
@@ -50,6 +59,26 @@ export default function CheckoutPage() {
       postalCode: addressData.postalCode,
       country: addressData.country
     }));
+  };
+
+  const handleApplyDiscount = async () => {
+    if (!discountCode.trim()) return;
+    setIsValidatingDiscount(true);
+    setDiscountError('');
+    
+    try {
+      const result = await validateDiscount(discountCode, subtotal);
+      if (result.success) {
+        setAppliedDiscount(result.discount);
+        setDiscountCode('');
+      } else {
+        setDiscountError(result.error || 'Invalid code');
+      }
+    } catch (err) {
+      setDiscountError('Validation failed.');
+    } finally {
+      setIsValidatingDiscount(false);
+    }
   };
 
   const handleContinueToPayment = async (e: React.FormEvent) => {
@@ -108,6 +137,8 @@ export default function CheckoutPage() {
         items: items, // Pass directly as array (Drizzle handles JSONB)
         walletAddress: address || null, 
         transactionHash: transactionHash,
+        discountCode: appliedDiscount?.code || null,
+        discountAmount: discountAmount.toFixed(2),
       });
 
       if (!result.success) {
@@ -234,11 +265,42 @@ export default function CheckoutPage() {
               ))}
             </div>
             
+            <div className="mb-6 space-y-2">
+              <div className="flex gap-2">
+                <input 
+                  placeholder="Discount Code" 
+                  value={discountCode}
+                  onChange={(e) => setDiscountCode(e.target.value)}
+                  className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm outline-none focus:border-neon-pink transition-colors"
+                />
+                <button 
+                  onClick={handleApplyDiscount}
+                  disabled={isValidatingDiscount || !discountCode}
+                  className="bg-white/10 hover:bg-white text-white hover:text-black border border-white/10 px-4 py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-50"
+                >
+                  {isValidatingDiscount ? '...' : 'Apply'}
+                </button>
+              </div>
+              {discountError && <p className="text-[10px] text-red-500 font-mono">{discountError}</p>}
+              {appliedDiscount && (
+                <div className="flex justify-between items-center bg-acid-green/10 border border-acid-green/20 px-3 py-2 rounded-lg">
+                  <span className="text-[10px] font-mono text-acid-green font-bold uppercase">{appliedDiscount.code} APPLIED</span>
+                  <button onClick={() => setAppliedDiscount(null)} className="text-acid-green hover:text-white transition-colors"><Trash2 className="w-3 h-3" /></button>
+                </div>
+              )}
+            </div>
+
             <div className="border-t border-white/10 pt-4 space-y-2 mb-6 text-sm">
               <div className="flex justify-between text-white/50">
                 <span>Subtotal</span>
                 <span className="font-mono">${subtotal.toFixed(2)}</span>
               </div>
+              {discountAmount > 0 && (
+                <div className="flex justify-between text-acid-green">
+                  <span>Discount</span>
+                  <span className="font-mono">-${discountAmount.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-white/50">
                 <span>Shipping</span>
                 <span className="font-mono">
