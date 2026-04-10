@@ -216,8 +216,12 @@ export async function createOrder(orderData: any) {
           </div>
         `,
       });
-    } catch (mailError) {
-      console.error('Resend failed:', mailError);
+    } catch (mailError: any) {
+      console.error('CRITICAL: Resend Transmission Failed:', {
+        message: mailError.message,
+        name: mailError.name,
+        details: mailError
+      });
     }
 
     return { success: true, orderId: newOrder.id };
@@ -260,8 +264,12 @@ export async function updateOrderTracking(orderId: number, trackingNumber: strin
           </div>
         `,
       });
-    } catch (mailError) {
-      console.error('Resend shipping mail failed:', mailError);
+    } catch (mailError: any) {
+      console.error('CRITICAL: Resend Shipping Mail Failed:', {
+        message: mailError.message,
+        name: mailError.name,
+        details: mailError
+      });
     }
 
     return { success: true };
@@ -386,8 +394,12 @@ export async function generateShippingLabel(orderId: number) {
           </div>
         `,
       });
-    } catch (mailError) {
-      console.error('Resend failed:', mailError);
+    } catch (mailError: any) {
+      console.error('CRITICAL: Resend Label Notification Failed:', {
+        message: mailError.message,
+        name: mailError.name,
+        details: mailError
+      });
     }
 
     return { 
