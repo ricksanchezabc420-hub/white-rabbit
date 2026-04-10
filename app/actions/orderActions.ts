@@ -26,119 +26,68 @@ export async function getOrders() {
 
 export async function getShippingRates(addressData: any, unitCount: number) {
   try {
-    const weight = (unitCount * 175) + (unitCount <= 3 ? 50 : 100); 
-    const dimensions = unitCount <= 3 
-      ? { length: 26, width: 19, height: 6 } 
-      : unitCount <= 8 
-        ? { length: 38, width: 26, height: 6 } 
-        : { length: 40, width: 30, height: 15 };
-
-    const SHIPPO_KEY = getShippoKey();
-    const isTest = SHIPPO_KEY.startsWith('shippo_test_');
+    console.log('--- Anonymous 2026 Shipping Calculation ---');
     
-    console.log('Shippo Request (v4.3):', { isTest, key: SHIPPO_KEY.substring(0, 15) + '...' });
+    // 1. Determine Size Tier based on unitCount
+    let sizeTier: 'small' | 'medium' | 'large' = 'small';
+    if (unitCount >= 4 && unitCount <= 8) sizeTier = 'medium';
+    if (unitCount >= 9) sizeTier = 'large';
 
-    const response = await fetch('https://api.goshippo.com/shipments/', {
-      method: 'POST',
-      headers: {
-        'Authorization': `ShippoToken ${SHIPPO_KEY}`,
-        'Content-Type': 'application/json',
-        'Shippo-API-Version': '2018-02-08'
-      },
-      body: JSON.stringify({
-        address_from: {
-          name: 'White Rabbit Warehouse',
-          street1: '190 Northfield Dr West',
-          city: 'Waterloo',
-          state: 'ON',
-          zip: 'N2L 0A6',
-          country: 'CA',
-        },
-        address_to: {
-          name: 'Customer',
-          street1: addressData.address,
-          city: addressData.city,
-          state: addressData.stateProvince,
-          zip: addressData.postalCode,
-          country: addressData.country || 'CA',
-        },
-        parcels: [{
-          length: dimensions.length,
-          width: dimensions.width,
-          height: dimensions.height,
-          distance_unit: 'cm',
-          weight: weight,
-          mass_unit: 'g',
-        }],
-        async: false,
-        test: isTest,
-      }),
-    });
+    // 2. Determine Geographic Zone based on Postal Code / Province
+    const postalCode = String(addressData.postalCode || '').trim().toUpperCase();
+    const province = String(addressData.stateProvince || '').trim().toUpperCase();
+    const fsa = postalCode.substring(0, 2); // e.g. "N2"
+    const fsaPrefix = postalCode.charAt(0); // e.g. "L"
 
-    if (!response.ok) {
-      const errData = await response.json();
-      throw new Error(`[API Status ${response.status}] ${JSON.stringify(errData.message || errData)}`);
+    let zone = 4; // Default to Remote
+
+    if (fsa === 'N1' || fsa === 'N2' || fsa === 'N3') {
+      zone = 0; // Inner Ring: KW/Guelph
+    } else if (fsaPrefix === 'L' || fsaPrefix === 'M' || fsaPrefix === 'N') {
+      zone = 1; // Middle Ring: GTA/London/Southern ON
+    } else if (province === 'ON' || province === 'QC') {
+      zone = 2; // Outer Regional ON/QC
+    } else if (['MB', 'SK', 'NB', 'NS', 'PE'].includes(province)) {
+      zone = 3; // National
     }
 
-    const result = await response.json();
-    
-    // Check if shipment itself has nested messages/errors
-    if (result.messages && result.messages.length > 0) {
-      const msg = result.messages[0];
-      if (msg.code === 'ERROR') {
-        throw new Error(`Shippo Logistics Error: ${msg.text}`);
-      }
-    }
+    // 3. Final 2026 Pricing Matrix (Competitive Commercial Rates)
+    const matrix: Record<number, Record<string, number>> = {
+      0: { small: 12.50, medium: 14.50, large: 17.50 },
+      1: { small: 14.50, medium: 16.50, large: 20.50 },
+      2: { small: 17.50, medium: 20.50, large: 25.50 },
+      3: { small: 24.50, medium: 29.50, large: 36.50 },
+      4: { small: 32.50, medium: 39.50, large: 48.50 }
+    };
 
-    // Select the best rate (Expedited Parcel preferred)
-    const availableRates = result.rates || [];
-    console.log(`Shippo returned ${availableRates.length} total rates.`);
-    
-    if (availableRates.length === 0 && result.messages) {
-      console.log('Shippo Messages:', JSON.stringify(result.messages));
-    }
+    const finalAmountString = matrix[zone][sizeTier].toFixed(2);
+    const serviceName = zone <= 1 ? "Expedited Parcel (Local/Near)" : zone === 2 ? "Expedited Parcel (Regional)" : "Expedited Parcel (National)";
 
-    const rates = availableRates.filter((r: any) => 
-      r.servicelevel.token === 'canadapost_expedited_parcel'
-    );
-    const rate = rates.length > 0 ? rates[0] : availableRates[0];
-
-    if (!rate && isTest) {
-      console.warn('Shippo Test Mode: NO RATES FOUND for this address/carrier. Using $22.50 safety fallback.');
-      return { 
-        success: true, 
-        rate: {
-          amount: "22.50",
-          currency: "CAD",
-          servicelevel: {
-            name: "Canada Post Expedited Parcel (Testing Fallback)",
-            token: "canadapost_expedited_parcel"
-          },
-          object_id: "test_fallback_" + Date.now()
-        } 
-      };
-    }
-
-    if (!rate) {
-      const detail = result.messages?.map((m: any) => m.text).join(', ') || 'Address/Service level mismatch';
-      throw new Error(`Carrier Unreachable (v4.4): ${detail}`);
-    }
+    console.log(`Calculated Zone: ${zone}, Size: ${sizeTier}, Cost: $${finalAmountString}`);
 
     return { 
       success: true, 
       rate: {
-        amount: rate.amount,
-        currency: rate.currency,
+        amount: finalAmountString,
+        currency: "CAD",
         servicelevel: {
-          name: rate.servicelevel.name,
-          token: rate.servicelevel.token
+          name: serviceName,
+          token: "canadapost_expedited_parcel"
         },
-        object_id: rate.object_id
+        object_id: "anonymous_2026_" + Date.now()
       } 
     };
   } catch (error: any) {
-    console.error('REST Shipping error:', error);
-    return { success: false, error: `Logistics Transmission (v4.4): ${error.message}` };
+    console.error('Shipping calculation error:', error);
+    return {
+      success: true,
+      rate: {
+        amount: "22.50",
+        currency: "CAD",
+        servicelevel: { name: "Expedited Parcel (Standard)", token: "canadapost_expedited_parcel" },
+        object_id: "safety_fallback_" + Date.now()
+      }
+    };
   }
 }
 
