@@ -67,6 +67,7 @@ export async function getShippingRates(addressData: any, unitCount: number) {
 
     return { 
       success: true, 
+      error: null,
       rate: {
         amount: finalAmountString,
         currency: "CAD",
@@ -80,13 +81,9 @@ export async function getShippingRates(addressData: any, unitCount: number) {
   } catch (error: any) {
     console.error('Shipping calculation error:', error);
     return {
-      success: true,
-      rate: {
-        amount: "22.50",
-        currency: "CAD",
-        servicelevel: { name: "Expedited Parcel (Standard)", token: "canadapost_expedited_parcel" },
-        object_id: "safety_fallback_" + Date.now()
-      }
+      success: false,
+      error: error.message || "Calculation failed",
+      rate: null
     };
   }
 }

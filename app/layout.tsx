@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
-import { Web3Provider } from "@/providers/Web3Provider";
+
 import CartDrawer from "@/components/CartDrawer";
 
 const sans = Inter({
@@ -29,11 +29,9 @@ export default function RootLayout({
       <body
         className={`${sans.variable} ${serif.variable} antialiased bg-[#000000] text-white selection:bg-neon-pink/30`}
       >
-        <Web3Provider>
-          <div className="fixed inset-0 pointer-events-none z-[100] neon-border-glow animate-slow-pulse" />
-          {children}
-          <CartDrawer />
-        </Web3Provider>
+        <div className="fixed inset-0 pointer-events-none z-[100] neon-border-glow animate-slow-pulse" />
+        {children}
+        <CartDrawer />
       </body>
     </html>
   );

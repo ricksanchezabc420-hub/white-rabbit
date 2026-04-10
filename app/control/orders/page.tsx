@@ -180,20 +180,7 @@ export default function FulfillmentPage() {
                   <div className="lg:w-1/4 flex flex-col justify-center">
                     {order.status === 'PENDING' ? (
                       <div className="space-y-3">
-                        <button 
-                          onClick={() => handleGenerateLabel(order.id)}
-                          disabled={isProcessingLabel === order.id}
-                          className="w-full bg-electric-blue text-black py-3 rounded-xl font-bold text-sm tracking-widest hover:shadow-[0_0_15px_rgba(0,255,255,0.3)] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                        >
-                          <FileText className="w-4 h-4" />
-                          {isProcessingLabel === order.id ? 'PRINTING...' : 'BUY & PRINT LABEL'}
-                        </button>
-                        
-                        <div className="relative flex items-center py-2">
-                          <div className="flex-grow border-t border-white/5"></div>
-                          <span className="flex-shrink mx-4 text-[8px] text-white/20 uppercase tracking-widest">or manual</span>
-                          <div className="flex-grow border-t border-white/5"></div>
-                        </div>
+                        <div className="flex-grow border-t border-white/5 py-4"></div>
 
                         <input 
                           placeholder="Manual Tracking Code"
