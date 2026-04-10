@@ -198,6 +198,9 @@ export async function createOrder(orderData: any) {
         from: 'White Rabbit <orders@whiterabbitsociety.xyz>',
         to: [newOrder.email],
         replyTo: 'whiterabbitsociety@outlook.com',
+        headers: {
+          'Reply-To': 'whiterabbitsociety@outlook.com'
+        },
         subject: `The Hunt Begins: Order WR${newOrder.id}`,
         html: `
           <div style="font-family: serif; max-width: 600px; margin: 0 auto; padding: 40px; background: #000; color: #fff; border: 1px solid #333; border-radius: 30px;">
@@ -244,6 +247,9 @@ export async function updateOrderTracking(orderId: number, trackingNumber: strin
         from: 'White Rabbit <orders@whiterabbitsociety.xyz>',
         to: [updatedOrder.email],
         replyTo: 'whiterabbitsociety@outlook.com',
+        headers: {
+          'Reply-To': 'whiterabbitsociety@outlook.com'
+        },
         subject: `Order Shipped #WR${updatedOrder.id} - White Rabbit`,
         html: `
           <div style="font-family: serif; max-width: 600px; margin: 0 auto; padding: 40px; background: #000; color: #fff; border: 1px solid #333; border-radius: 30px;">
@@ -373,6 +379,9 @@ export async function generateShippingLabel(orderId: number) {
         from: 'White Rabbit <orders@whiterabbitsociety.xyz>',
         to: [order.email],
         replyTo: 'whiterabbitsociety@outlook.com',
+        headers: {
+          'Reply-To': 'whiterabbitsociety@outlook.com'
+        },
         subject: `Your White Rabbit has Shipped! 📦`,
         html: `
           <div style="font-family: serif; max-width: 600px; margin: 0 auto; padding: 40px; background: #000; color: #fff; border: 1px solid #333; border-radius: 30px;">
