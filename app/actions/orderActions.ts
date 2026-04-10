@@ -140,7 +140,7 @@ export async function getShippingRates(addressData: any, unitCount: number) {
 
 export async function createOrder(orderData: any) {
   try {
-    console.log('--- Incoming Order (v4.16 CONSOLIDATED) ---');
+    console.log(`--- Incoming Order (v4.26 DIAGNOSTIC) ---`);
     
     // v4.15 Strict Data Cleaning
     const addressStr = String(orderData.address || '').trim();
@@ -152,6 +152,7 @@ export async function createOrder(orderData: any) {
 
     let newOrder;
     try {
+      console.log('Inserting order into DB...');
       const results = await db.insert(orders).values({
         paymentMethod: orderData.paymentMethod,
         walletAddress: orderData.walletAddress ? String(orderData.walletAddress).substring(0, 42) : null,
@@ -171,6 +172,7 @@ export async function createOrder(orderData: any) {
         discountAmount: orderData.discountAmount ? String(orderData.discountAmount) : null,
       }).returning();
       newOrder = results[0];
+      console.log('Order created with ID:', newOrder.id);
 
       // Increment discount usage if applicable
       if (orderData.discountCode) {
@@ -183,7 +185,7 @@ export async function createOrder(orderData: any) {
         }
       }
     } catch (dbError: any) {
-      console.error('DB Insert Error (v4.16):', dbError);
+      console.error('DB Insert Error (v4.26):', dbError);
       const detail = dbError.detail || dbError.message || 'Check Server Logs';
       throw new Error(`DB Fail: ${detail}`);
     }
@@ -194,7 +196,8 @@ export async function createOrder(orderData: any) {
 
     // Send Confirmation via Resend
     try {
-      await resend.emails.send({
+      console.log(`Attempting to send email to ${newOrder.email} via Resend...`);
+      const emailResult = await resend.emails.send({
         from: 'White Rabbit <orders@whiterabbitsociety.xyz>',
         to: [newOrder.email],
         replyTo: 'whiterabbitsociety@outlook.com',
@@ -216,6 +219,7 @@ export async function createOrder(orderData: any) {
           </div>
         `,
       });
+      console.log('Resend send() called. result:', JSON.stringify(emailResult));
     } catch (mailError: any) {
       console.error('CRITICAL: Resend Transmission Failed:', {
         message: mailError.message,
@@ -224,6 +228,7 @@ export async function createOrder(orderData: any) {
       });
     }
 
+    console.log('Order process completed successfully.');
     return { success: true, orderId: newOrder.id };
   } catch (error: any) {
     console.error('Fatal order creation error:', error);
