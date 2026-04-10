@@ -57,7 +57,7 @@ export default function Collection() {
           <h2 className="text-sm tracking-[0.2em] text-vibrant-purple uppercase mb-4">The Collection</h2>
           <h3 className="text-5xl md:text-6xl font-serif">DRINK DIFFERENT</h3>
           <p className="mt-4 text-white/50 font-light max-w-xl mx-auto">
-            3000MG Precision Dosing. Select your flavor and pay seamlessly with Web3 crypto.
+            3000MG Precision Dosing. Select your flavor and pay seamlessly with Web3 crypto or e-transfer.
           </p>
         </div>
 

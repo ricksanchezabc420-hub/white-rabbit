@@ -213,7 +213,7 @@ export async function updateOrderTracking(orderId: number, trackingNumber: strin
               <p>Tracking Code: <span style="font-family: monospace; color: #bfff00; font-size: 20px; letter-spacing: 2px;">${trackingNumber}</span></p>
             </div>
             <div style="margin-top: 40px; text-align: center;">
-               <p style="color: #666; font-size: 11px;">Track your package via your preferred carrier with the code above.</p>
+               <p style="color: #666; font-size: 11px;">Track your package via Canada Post with the code above.</p>
             </div>
             <p style="margin-top: 60px; text-align: center; font-size: 10px; color: #444; letter-spacing: 2px;">THE SEQUENCE COMPLETES SOON</p>
           </div>
@@ -346,7 +346,7 @@ export async function generateShippingLabel(orderId: number) {
               <p>Service: <strong>${rate.servicelevel.name}</strong></p>
             </div>
             <div style="margin-top: 40px; text-align: center;">
-               <p style="color: #666; font-size: 11px;">Track your package via your preferred carrier with the code above.</p>
+               <p style="color: #666; font-size: 11px;">Track your package via Canada Post with the code above.</p>
             </div>
             <p style="margin-top: 60px; text-align: center; font-size: 10px; color: #444; letter-spacing: 2px;">THE SEQUENCE COMPLETES SOON</p>
           </div>

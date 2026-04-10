@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ShieldCheck, Wallet, Truck, Package, Info, CheckCircle2, Trash2 } from 'lucide-react';
-import { useAccount, useSendTransaction } from 'wagmi';
-import { parseEther } from 'viem';
 import { useCartStore } from '@/store/useCartStore';
 import { getShippingRates, createOrder } from '@/app/actions/orderActions';
 import { validateDiscount } from '@/app/actions/discountActions';
@@ -17,8 +15,8 @@ const ADMIN_WALLET = process.env.NEXT_PUBLIC_ADMIN_WALLET || '0x0000000000000000
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, getCartTotal, clearCart, getCartTotalUSDC } = useCartStore();
-  const { address, isConnected } = useAccount();
-  const { sendTransactionAsync } = useSendTransaction();
+  
+  
   
   const [step, setStep] = useState<1 | 2 | 3>(1); // 1: Shipping, 2: Payment, 3: Success
   const [isLoading, setIsLoading] = useState(false);
@@ -40,6 +38,7 @@ export default function CheckoutPage() {
     stateProvince: '',
     postalCode: '',
     country: 'CA',
+    transactionHash: '', // v7.0 Manual Hash
   });
 
   const subtotal = getCartTotal();
@@ -48,7 +47,8 @@ export default function CheckoutPage() {
   
   const discountAmount = appliedDiscount ? parseFloat(appliedDiscount.amount) : 0;
   const totalCad = Math.max(0, subtotal + shippingCharge - discountAmount);
-  const totalUsdc = totalCad * 0.75; 
+  // Estimation for display
+  const totalUsdc = totalCad * 0.73; // v7.0 current market approx
 
   const handleAddressSelected = (addressData: any) => {
     setFormData((prev) => ({
@@ -104,37 +104,14 @@ export default function CheckoutPage() {
   };
 
   const handleProcessOrder = async () => {
+    if (paymentMethod === 'CRYPTO' && !formData.transactionHash) {
+      alert('Please enter your transaction hash to verify payment.');
+      return;
+    }
+
     setIsProcessing(true);
     
     try {
-      let transactionHash = null;
-
-      if (paymentMethod === 'CRYPTO') {
-        if (!isConnected || !address) {
-          alert('Please connect your Web3 wallet first.');
-          setIsProcessing(false);
-          return;
-        }
-        
-        // Final sanity check for recipient
-        if (ADMIN_WALLET === '0x0000000000000000000000000000000000000000') {
-          console.warn('CRITICAL: Admin wallet is not configured. Using fallback safely for testing.');
-        }
-
-        // v4.22: Dynamic Value Calculation
-        // Recommendation: In production, fetch a real-time price feed (e.g. Chainlink)
-        // For now, we use a placeholder rate (e.g. 1 ETH = $3000 CAD)
-        const ethRate = 3000; 
-        const cryptoValue = (totalCad / ethRate).toFixed(6);
-        console.log(`Calculating dynamic crypto value: $${totalCad} CAD -> ${cryptoValue} ETH`);
-
-        const hash = await sendTransactionAsync({
-          to: ADMIN_WALLET as `0x${string}`, 
-          value: parseEther(cryptoValue),
-        });
-        transactionHash = hash;
-      }
-
       const result = await createOrder({
         ...formData,
         paymentMethod,
@@ -142,8 +119,8 @@ export default function CheckoutPage() {
         shippingCost: shippingCharge.toFixed(2),
         shippingService: shippingRate ? shippingRate.servicelevel.name : 'Canada Post Expedited Parcel',
         items: items, 
-        walletAddress: address || null, 
-        transactionHash: transactionHash,
+        walletAddress: null, // No longer collecting user wallet for privacy
+        transactionHash: formData.transactionHash || null,
         discountCode: appliedDiscount?.code || null,
         discountAmount: discountAmount.toFixed(2),
       });
@@ -156,7 +133,7 @@ export default function CheckoutPage() {
       setStep(3);
     } catch (error: any) {
       console.error('Checkout error:', error);
-      alert(`Order failed (v4.16): ${error.message || 'Transmission interrupted.'}`);
+      alert(`Order failed: ${error.message || 'Transmission interrupted.'}`);
     } finally {
       setIsProcessing(false);
     }
@@ -210,34 +187,71 @@ export default function CheckoutPage() {
 
           {step === 2 && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass p-8 rounded-3xl">
-              <h2 className="text-xl font-medium mb-6 flex items-center gap-2"><Wallet className="w-5 h-5 text-electric-blue" /> 2. Payment Method</h2>
+              <h2 className="text-xl font-medium mb-6 flex items-center gap-2"><Wallet className="w-5 h-5 text-neon-pink" /> 2. Choose Payment Method</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                <button onClick={() => setPaymentMethod('CRYPTO')} className={`p-6 rounded-xl border flex flex-col items-center gap-3 transition-all ${paymentMethod === 'CRYPTO' ? 'bg-white/10 border-electric-blue shadow-[0_0_15px_rgba(0,255,255,0.2)]' : 'bg-transparent border-white/10 hover:border-white/30'}`}>
+                <button onClick={() => setPaymentMethod('CRYPTO')} className={`p-6 rounded-xl border flex flex-col items-center gap-3 transition-all ${paymentMethod === 'CRYPTO' ? 'bg-white/10 border-neon-pink shadow-[0_0_15px_rgba(255,0,255,0.2)]' : 'bg-transparent border-white/10 hover:border-white/30'}`}>
                   <span className="text-2xl">🌐</span>
-                  <span className="font-bold">Web3 Crypto</span>
-                  <span className="text-xs text-white/50">Instant on-chain settlement</span>
+                  <span className="font-bold">Crypto Transfer</span>
+                  <span className="text-xs text-white/50">Manual Wallet-to-Wallet</span>
                 </button>
                 <button onClick={() => setPaymentMethod('E-TRANSFER')} className={`p-6 rounded-xl border flex flex-col items-center gap-3 transition-all ${paymentMethod === 'E-TRANSFER' ? 'bg-white/10 border-acid-green shadow-[0_0_15px_rgba(191,255,0,0.2)]' : 'bg-transparent border-white/10 hover:border-white/30'}`}>
                   <span className="text-2xl">🏦</span>
                   <span className="font-bold">E-Transfer</span>
-                  <span className="text-xs text-white/50">Manual bank transfer verification</span>
+                  <span className="text-xs text-white/50">Safe Canadian Banking</span>
                 </button>
               </div>
+
+              {paymentMethod === 'CRYPTO' && (
+                <div className="space-y-6 mb-8">
+                  <div className="bg-white/5 border border-white/10 p-6 rounded-2xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-4 opacity-10">
+                       <Wallet className="w-12 h-12" />
+                    </div>
+                    <label className="text-[10px] font-mono text-white/30 uppercase tracking-widest block mb-2">Recipient Wallet Address (ERC-20/ETH)</label>
+                    <div className="flex items-center gap-3">
+                      <div className="bg-black/50 p-3 rounded-lg font-mono text-xs text-acid-green flex-1 break-all overflow-hidden border border-white/5">
+                        {ADMIN_WALLET}
+                      </div>
+                      <button 
+                        onClick={() => {
+                          navigator.clipboard.writeText(ADMIN_WALLET);
+                          alert('Address copied to clipboard!');
+                        }}
+                        className="p-3 bg-white/10 hover:bg-white text-white hover:text-black rounded-lg transition-all"
+                      >
+                         <Info className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <p className="mt-3 text-[10px] text-white/40 italic">Please send exactly the amount shown in the total summary.</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-mono text-white/30 uppercase tracking-widest block">Past Transaction Hash (Required)</label>
+                    <input 
+                      required
+                      placeholder="0x..." 
+                      className="w-full bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-neon-pink transition-colors font-mono text-sm"
+                      value={formData.transactionHash}
+                      onChange={(e) => setFormData({...formData, transactionHash: e.target.value})}
+                    />
+                  </div>
+                </div>
+              )}
 
               {paymentMethod === 'E-TRANSFER' && (
                 <div className="bg-acid-green/10 border border-acid-green/20 p-6 rounded-xl mb-8">
                   <h3 className="text-acid-green font-bold mb-2">E-Transfer Instructions</h3>
-                  <p className="text-sm text-white/70">Please send exactly <strong>${totalCad.toFixed(2)} CAD</strong> (~${totalUsdc.toFixed(2)} USDC) to <strong>pay@whiterabbit.com</strong>. Include your email address in the transfer notes. Your order will ship once the deposit is manually verified.</p>
+                  <p className="text-sm text-white/70">Please send exactly <strong>${totalCad.toFixed(2)} CAD</strong> to <strong>pay@whiterabbitsociety.xyz</strong>. Include your email address in the transfer notes. Your order will ship once the deposit is manually verified.</p>
                 </div>
               )}
 
               <button 
                 onClick={handleProcessOrder}
                 disabled={isProcessing}
-                className="w-full bg-neon-pink text-black py-4 rounded-xl font-bold hover:shadow-[0_0_20px_rgba(255,0,255,0.5)] transition-all disabled:opacity-50"
+                className="w-full bg-white text-black py-4 rounded-xl font-bold hover:shadow-[0_0_20px_rgba(255,255,255,0.5)] transition-all disabled:opacity-50"
               >
-                {isProcessing ? 'Processing...' : `Place Order • $${totalCad.toFixed(2)} CAD`}
+                {isProcessing ? 'Processing...' : `Confirm Order • $${totalCad.toFixed(2)} CAD`}
               </button>
             </motion.div>
           )}
@@ -245,13 +259,13 @@ export default function CheckoutPage() {
           {step === 3 && (
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass p-12 rounded-3xl text-center flex flex-col items-center">
               <CheckCircle2 className="w-20 h-20 text-acid-green mb-6" />
-              <h2 className="text-4xl font-serif mb-4">Order Confirmed</h2>
+              <h2 className="text-4xl font-serif mb-4">Sequence Initiated</h2>
               <p className="text-white/60 mb-8 max-w-md">
                 {paymentMethod === 'CRYPTO' 
-                  ? "Your Web3 transaction was successfully verified on-chain. Generating shipping manifest." 
-                  : "Your order is reserved. Please complete the e-transfer to finalize production and shipping."}
+                  ? "Your transaction hash has been recorded. Our technicians will verify the block and begin fulfillment shortly." 
+                  : "Your order is reserved. Please complete the e-transfer to whiterabbitsociety@outlook.com to finalize production."}
               </p>
-              <Link href="/"><button className="bg-white/10 hover:bg-white hover:text-black border border-white/20 px-8 py-3 rounded-full font-bold transition-all">Return to Storefront</button></Link>
+              <Link href="/"><button className="bg-white/10 hover:bg-white hover:text-black border border-white/20 px-8 py-3 rounded-full font-bold transition-all">Return to Home</button></Link>
             </motion.div>
           )}
         </div>

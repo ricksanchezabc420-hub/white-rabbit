@@ -54,19 +54,6 @@ export default function Header() {
             </span>
           )}
         </button>
-
-        <ConnectKitButton.Custom>
-          {({ isConnected, show, truncatedAddress, ensName }) => {
-            return (
-              <button 
-                onClick={show}
-                className="glass px-5 py-2.5 rounded-full text-xs font-semibold hover:bg-white/10 hover:shadow-[0_0_15px_rgba(255,255,255,0.2)] transition-all"
-              >
-                {isConnected ? ensName ?? truncatedAddress : "Connect Wallet"}
-              </button>
-            );
-          }}
-        </ConnectKitButton.Custom>
       </div>
     </motion.nav>
   );
