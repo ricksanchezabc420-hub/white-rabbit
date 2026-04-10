@@ -92,15 +92,19 @@ export async function getShippingRates(addressData: any, unitCount: number) {
 
     // Select the best rate (Expedited Parcel preferred)
     const availableRates = result.rates || [];
+    console.log(`Shippo returned ${availableRates.length} total rates.`);
+    
+    if (availableRates.length === 0 && result.messages) {
+      console.log('Shippo Messages:', JSON.stringify(result.messages));
+    }
+
     const rates = availableRates.filter((r: any) => 
       r.servicelevel.token === 'canadapost_expedited_parcel'
     );
     const rate = rates.length > 0 ? rates[0] : availableRates[0];
 
-    // v4.4 SMART FALLBACK: If we are in Test Mode and Shippo returned NO rates (common for CP sandbox), 
-    // provide a fixed rate so the user can test the rest of the flow.
     if (!rate && isTest) {
-      console.warn('Shippo returned no test rates. Providing smart fallback for testing.');
+      console.warn('Shippo Test Mode: NO RATES FOUND for this address/carrier. Using $22.50 safety fallback.');
       return { 
         success: true, 
         rate: {
