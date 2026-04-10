@@ -195,7 +195,7 @@ export async function createOrder(orderData: any) {
     // Send Confirmation via Resend
     try {
       await resend.emails.send({
-        from: 'White Rabbit <onboarding@resend.dev>',
+        from: 'White Rabbit <orders@whiterabbitsociety.xyz>',
         to: [newOrder.email],
         subject: `The Hunt Begins: Order WR${newOrder.id}`,
         html: `
@@ -240,7 +240,7 @@ export async function updateOrderTracking(orderId: number, trackingNumber: strin
     // Send Shipping Confirmation via Resend
     try {
       await resend.emails.send({
-        from: 'White Rabbit <onboarding@resend.dev>',
+        from: 'White Rabbit <orders@whiterabbitsociety.xyz>',
         to: [updatedOrder.email],
         subject: `Order Shipped #WR${updatedOrder.id} - White Rabbit`,
         html: `
@@ -364,7 +364,7 @@ export async function generateShippingLabel(orderId: number) {
 
     try {
       await resend.emails.send({
-        from: 'White Rabbit <onboarding@resend.dev>',
+        from: 'White Rabbit <orders@whiterabbitsociety.xyz>',
         to: [order.email],
         subject: `Your White Rabbit has Shipped! 📦`,
         html: `
