@@ -44,7 +44,7 @@ export default function FreeShippingBanner() {
             }}
             className="text-white text-[10px] md:text-sm font-bold uppercase tracking-[0.3em] py-2 px-6 rounded-full"
           >
-            FREE SHIPPING ON ORDERS OVER $150
+            FREE SHIPPING ON ORDERS OVER $130
           </motion.div>
         </motion.div>
       )}

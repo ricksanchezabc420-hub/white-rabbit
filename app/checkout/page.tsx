@@ -42,7 +42,7 @@ export default function CheckoutPage() {
   });
 
   const subtotal = getCartTotal();
-  const isFreeShipping = subtotal >= 150;
+  const isFreeShipping = subtotal >= 130;
   const shippingCharge = isFreeShipping ? 0 : (shippingRate ? parseFloat(shippingRate.amount) : 0);
   
   const discountAmount = appliedDiscount ? parseFloat(appliedDiscount.amount) : 0;
