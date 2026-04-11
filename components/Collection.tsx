@@ -121,25 +121,25 @@ export default function Collection() {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className={`col-span-1 md:col-start-2 md:col-span-2 glass flex flex-col md:flex-row p-6 md:p-8 rounded-[40px] transition-all duration-700 group border border-white/10 hover:border-white/40 relative overflow-hidden ${comboPack.glow}`}
+            className={`col-span-1 md:col-span-4 glass flex flex-col md:flex-row p-6 md:p-10 rounded-[40px] transition-all duration-700 group border border-white/10 hover:border-white/40 relative overflow-hidden ${comboPack.glow}`}
           >
             {/* Animated Gradient Border for "Pop" */}
             <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-white/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             
-            <div className="w-full md:w-1/2 aspect-square md:aspect-auto md:h-64 rounded-2xl bg-black/40 mb-6 md:mb-0 md:mr-8 overflow-hidden relative border border-white/5">
+            <div className="w-full md:w-3/5 aspect-video md:aspect-auto md:h-96 rounded-3xl bg-black/40 mb-6 md:mb-0 md:mr-10 overflow-hidden relative border border-white/5">
               <Image 
                 src={`/${comboPack.imageFile}`}
                 alt={comboPack.name}
                 fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-contain p-4 mix-blend-screen group-hover:scale-105 transition-transform duration-700"
+                sizes="(max-width: 768px) 100vw, 60vw"
+                className="object-contain p-6 md:p-8 mix-blend-screen group-hover:scale-105 transition-transform duration-700"
               />
             </div>
 
             <div className="flex-1 flex flex-col justify-center items-center md:items-start text-center md:text-left">
-              <div className="inline-block px-3 py-1 rounded-full bg-white/5 text-[10px] font-bold tracking-[0.2em] text-acid-green mb-4 border border-acid-green/20">BEST VALUE</div>
-              <h4 className="text-3xl md:text-4xl font-serif text-white mb-2 tracking-wide uppercase">{comboPack.name}</h4>
-              <p className="text-white/50 text-xs md:text-sm font-light mb-6 leading-relaxed max-w-[280px]">
+              <div className="inline-block px-4 py-1.5 rounded-full bg-white/5 text-[10px] md:text-xs font-bold tracking-[0.2em] text-acid-green mb-6 border border-acid-green/20">PREMIUM SEQUENCE</div>
+              <h4 className="text-4xl md:text-6xl font-serif text-white mb-4 tracking-wide uppercase leading-tight">{comboPack.name}</h4>
+              <p className="text-white/50 text-sm md:text-base font-light mb-8 leading-relaxed max-w-md">
                 {comboPack.description}
               </p>
               
