@@ -1,7 +1,6 @@
 'use client';
 
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ConnectKitButton } from 'connectkit';
 import { ShoppingCart } from 'lucide-react';
 import { useCartStore } from '@/store/useCartStore';
 import { useUIStore } from '@/store/useUIStore';
