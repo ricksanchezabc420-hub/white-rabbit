@@ -18,15 +18,16 @@ export default function Header() {
   return (
     <motion.nav 
       style={{ paddingTop: py, paddingBottom: py }}
-      className="fixed top-0 w-full z-50 px-6 sm:px-12 flex items-center justify-between transition-all"
+      className="fixed top-0 w-full z-50 px-6 sm:px-12 flex items-center transition-all"
     >
       <motion.div 
         style={{ opacity: headerOpacity }}
         className="absolute inset-0 z-[-1] glass pointer-events-none" 
       />
       
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 relative">
+      {/* Left: Logo */}
+      <div className="flex-1 flex items-center gap-3">
+        <div className="w-10 h-10 relative text-neon-pink">
           <Image 
             src="/logo.png" 
             alt="Logo" 
@@ -38,13 +39,15 @@ export default function Header() {
         <span className="font-serif text-xl tracking-tighter neon-glow-pink select-none">WHITE RABBIT</span>
       </div>
 
-      <div className="hidden md:flex items-center gap-8">
+      {/* Center: Navigation Links */}
+      <div className="hidden md:flex flex-1 items-center justify-center gap-8">
         <button onClick={() => document.getElementById('innovations')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-light hover:text-neon-pink transition-colors">Innovations</button>
         <button onClick={() => document.getElementById('collection')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-light hover:text-neon-pink transition-colors">Collection</button>
         <button onClick={() => document.getElementById('science')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-light hover:text-neon-pink transition-colors">Science</button>
       </div>
 
-      <div className="flex items-center gap-4">
+      {/* Right: Cart */}
+      <div className="flex-1 flex items-center justify-end gap-4">
         <button onClick={() => toggleCart()} className="relative p-2 hover:bg-white/10 rounded-full transition-colors">
           <ShoppingCart className="w-5 h-5 text-white" />
           {items.length > 0 && (
